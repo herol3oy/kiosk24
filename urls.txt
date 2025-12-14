@@ -23,3 +23,5 @@ bbc.com
 techcrunch.com
 nature.com
 nytimes.com
+rferl.org
+politico.com
