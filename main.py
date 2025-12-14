@@ -27,22 +27,22 @@ def take_screenshots():
         temp_png = f"{OUTPUT_DIR}/{url}_{timestamp}.png"
         final_webp = f"{OUTPUT_DIR}/{url}_{timestamp}.webp"
         
-    print(f" > Capturing {url}")
+        print(f" > Capturing {url}")
 
-    command = [
-            "shot-scraper", url,
-            "-o", temp_png,
-            "--wait", "2000",
-            "--width", "1440",
-            "--height", "1080"
-        ]
-    
-    command.extend(["--javascript", "()=>{}"])
-    
-    try:
-        subprocess.run(command, check=True)
+        command = [
+                "shot-scraper", url,
+                "-o", temp_png,
+                "--wait", "2000",
+                "--width", "1440",
+                "--height", "1080"
+            ]
         
-    except Exception as e:
-        print(f"Error capturing {url}: {e}")
+        command.extend(["--javascript", "()=>{}"])
+    
+        try:
+            subprocess.run(command, check=True)
+            
+        except Exception as e:
+            print(f"Error capturing {url}: {e}")
 
 take_screenshots()
