@@ -1,0 +1,8 @@
+services:
+  engine:
+    build: .
+    container_name: kiosk24
+    volumes:
+      - ./screenshots:/code/screenshots
+      - ./urls.txt:/code/urls.txt
+    restart: unless-stopped
