@@ -30,16 +30,6 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-# Supabase setup
-#
-# CREATE TABLE screenshots (
-#   id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-#   created_at TIMESTAMPTZ DEFAULT NOW(),
-#   url TEXT,
-#   public_id TEXT,
-#   cloudinary_url TEXT,
-#   tags TEXT[]
-# );
 supabase_url = os.environ["SUPABASE_URL"]
 supabase_key = os.environ["SUPABASE_KEY"]
 supabase: Client = create_client(supabase_url, supabase_key)
@@ -59,7 +49,20 @@ def load_urls():
     with open(URLS_FILE) as file:
         return [line.strip() for line in file if line.strip()]
 
-def upload_screenshot(file_path: Path, public_id: str, tags: list, url: str):
+def store_screenshot_job(url: str, public_id: str, cloudinary_url: str | None, tags: list, status: str):
+    try:
+        supabase.table("screenshots").insert({
+            "url": url,
+            "public_id": public_id,
+            "cloudinary_url": cloudinary_url,
+            "tags": tags,
+            "job_status": status,
+        }).execute()
+        logger.info("Stored job in Supabase for %s with status %s", url, status)
+    except Exception:
+        logger.exception("Supabase insert failed for %s", url)
+
+def upload_screenshot(file_path: Path, public_id: str, tags: list):
     try:
         result = cloudinary.uploader.upload(
             file_path,
@@ -74,21 +77,11 @@ def upload_screenshot(file_path: Path, public_id: str, tags: list, url: str):
         secure_url = result["secure_url"]
         logger.info("Uploaded %s", secure_url)
         file_path.unlink(missing_ok=True)
-
-        # Store metadata in Supabase
-        try:
-            supabase.table("screenshots").insert({
-                "url": url,
-                "public_id": public_id,
-                "cloudinary_url": secure_url,
-                "tags": tags,
-            }).execute()
-            logger.info("Stored metadata in Supabase for %s", url)
-        except Exception:
-            logger.exception("Supabase insert failed for %s", url)
+        return {"secure_url": secure_url}
 
     except Exception:
         logger.exception("Cloudinary upload failed")
+        return None
 
 
 def take_screenshots():
@@ -125,10 +118,16 @@ def take_screenshots():
 
         try:
             subprocess.run(command, check=True, timeout=60)
-            upload_screenshot(temp_jpg_path, public_id, tags, url)
+            upload_result = upload_screenshot(temp_jpg_path, public_id, tags)
+
+            if upload_result:
+                store_screenshot_job(url, public_id, upload_result["secure_url"], tags, "ok")
+            else:
+                store_screenshot_job(url, public_id, None, tags, "failed")
 
         except Exception:
             logger.error("Screenshot failed for %s", target_url, exc_info=True)
+            store_screenshot_job(url, public_id, None, tags, "failed")
 
     logger.info("Screenshot job finished")
 
