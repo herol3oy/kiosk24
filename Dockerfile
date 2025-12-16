@@ -4,7 +4,9 @@ FROM python:3.14.2-slim-trixie
 
 WORKDIR /code
 
-RUN pip install --no-cache-dir shot-scraper cloudinary && \
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt && \
     shot-scraper install && \
     playwright install-deps && \
     rm -rf /var/lib/apt/lists/*
