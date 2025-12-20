@@ -31,10 +31,9 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-supabase_url = os.environ["SUPABASE_URL"]
-supabase_key = os.environ["SUPABASE_KEY"]
-supabase: Client = create_client(supabase_url, supabase_key)
-
+url = os.environ.get("SUPABASE_URL")
+key = os.environ.get("SUPABASE_KEY")
+supabase: Client = create_client(url, key)
 
 cloudinary.config(
     cloud_name=os.environ["CLOUDINARY_CLOUD_NAME"],
