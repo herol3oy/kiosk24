@@ -12,6 +12,6 @@ RUN apt-get update && apt-get install -y build-essential && \
     playwright install-deps && \
     rm -rf /var/lib/apt/lists/*
 
-COPY main.py cleanup.py .
+COPY main.py cleanup.py urls.txt .
 
 CMD ["python", "-u", "main.py"]
