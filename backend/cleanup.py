@@ -70,6 +70,26 @@ def get_js_cleanup():
         .desktop-nav.desktop-sticky-nav,
         .fc-consent-root,
         .ad__container,
-        .qc-cmp2-container
+        .qc-cmp2-container,
+        .fides-overlay,
+        .ad-stickyhero,
+        .app-0-0-2,
+        #onetrust-consent-sdk,
+        .above-header-ad,
+        .vip-banner,
+        #onetrust-consent-sdk,
+        [data-concert="leaderboard_top_tablet_desktop"],
+        .m-ad,
+        [class^="ad-wrap"],
+        .spacer-large,
+        partner-high-impact,
+        .message-container,
+        .gu-overlay,
+        .gdpr-lmd-wall,
+        .dfp__container,
+        [data-qa="AppBar-renderLayout-AdSlotContainer"],
+        [data-qa="GDPRBanner-Container"],
+        [data-qa="HomePage-FirstAds"],
+        .iubenda-cs-black
     `).forEach(e => e.remove());
     """

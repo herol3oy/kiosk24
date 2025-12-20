@@ -1,3 +1,12 @@
+scmp.com
+japantoday.com
+theguardian.com
+usatoday.com
+thedailybeast.com
+theverge.com
+variety.com
+dailymail.co.uk
+wired.com
 oko.press
 polityka.pl
 nbcnews.com
