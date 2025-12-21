@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { DayPicker } from "react-day-picker";
 import { format } from "date-fns";
+import { ReactCompareSlider, ReactCompareSliderImage } from "react-compare-slider";
+
+// --- Swiper Imports ---
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { FreeMode, Mousewheel } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/free-mode';
 import "react-day-picker/dist/style.css";
 
+// --- Configuration ---
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
@@ -21,6 +29,7 @@ type Screenshot = {
   job_status: "ok" | "failed";
 };
 
+// --- Helpers ---
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString([], {
     hour: "2-digit",
@@ -28,7 +37,14 @@ function formatTime(iso: string) {
   });
 }
 
-function optimizedImage(url: string, width = 1440) {
+function formatDateDetail(iso: string) {
+    return new Date(iso).toLocaleDateString([], {
+        month: 'short',
+        day: 'numeric'
+    });
+}
+
+function optimizedImage(url: string, width = 600) {
   return url.replace("/upload/", `/upload/f_auto,q_auto,w_${width}/`);
 }
 
@@ -39,10 +55,24 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [visibleUrls, setVisibleUrls] = useState<string[]>(DEFAULT_SITES);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  // --- Modal State ---
   const [selectedShot, setSelectedShot] = useState<Screenshot | null>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  // --- Versus Mode State ---
+  const [isVersusOpen, setIsVersusOpen] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+  
+  const [mobileActiveSide, setMobileActiveSide] = useState<"left" | "right">("left");
+  const [leftSite, setLeftSite] = useState<string>("");
+  const [leftShot, setLeftShot] = useState<Screenshot | null>(null);
+  const [rightSite, setRightSite] = useState<string>("");
+  const [rightShot, setRightShot] = useState<Screenshot | null>(null);
 
   const calendarRef = useRef<HTMLDivElement>(null);
 
+  // 1. Load Active Dates
   useEffect(() => {
     async function loadDates() {
       const { data, error } = await supabase.rpc("get_screenshot_days");
@@ -54,6 +84,7 @@ export default function Home() {
     loadDates();
   }, []);
 
+  // 2. Load Screenshots
   useEffect(() => {
     async function load() {
       setLoading(true);
@@ -71,18 +102,34 @@ export default function Home() {
         .order("url")
         .order("captured_at");
 
-      if (data) setScreenshots(data);
+      if (data) {
+        setScreenshots(data);
+        setLeftSite("");
+        setRightSite("");
+        setLeftShot(null);
+        setRightShot(null);
+      }
       setLoading(false);
     }
     load();
   }, [date]);
 
+  // 3. DIALOG SYNC EFFECT
+  // This bridges React state with the native <dialog> API
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    if (selectedShot) {
+      dialog.showModal();
+    } else {
+      dialog.close();
+    }
+  }, [selectedShot]);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        calendarRef.current &&
-        !calendarRef.current.contains(event.target as Node)
-      ) {
+      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
         setIsCalendarOpen(false);
       }
     }
@@ -90,44 +137,13 @@ export default function Home() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const grouped = screenshots.reduce<Record<string, Screenshot[]>>(
-    (acc, s) => {
-      acc[s.url] = acc[s.url] || [];
-      acc[s.url].push(s);
-      return acc;
-    },
-    {}
-  );
+  const grouped = screenshots.reduce<Record<string, Screenshot[]>>((acc, s) => {
+    acc[s.url] = acc[s.url] || [];
+    acc[s.url].push(s);
+    return acc;
+  }, {});
 
   const uniqueUrls = Object.keys(grouped);
-
-  const currentGroup = selectedShot ? grouped[selectedShot.url] : [];
-  const currentIndex = selectedShot ? currentGroup.findIndex(s => s.id === selectedShot.id) : -1;
-
-  const handleNext = useCallback(() => {
-    if (currentIndex < currentGroup.length - 1) {
-      setSelectedShot(currentGroup[currentIndex + 1]);
-    }
-  }, [currentIndex, currentGroup]);
-
-  const handlePrev = useCallback(() => {
-    if (currentIndex > 0) {
-      setSelectedShot(currentGroup[currentIndex - 1]);
-    }
-  }, [currentIndex, currentGroup]);
-
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (!selectedShot) return;
-
-      if (event.key === "Escape") setSelectedShot(null);
-      if (event.key === "ArrowRight") handleNext();
-      if (event.key === "ArrowLeft") handlePrev();
-    }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [selectedShot, handleNext, handlePrev]);
-
 
   const toggleUrl = (url: string) => {
     setVisibleUrls((prev) =>
@@ -139,47 +155,80 @@ export default function Home() {
     visibleUrls.includes(url)
   );
 
+  // --- Versus Logic ---
+  const openVersusMode = () => {
+    setIsVersusOpen(true);
+    setShowControls(true);
+    if (uniqueUrls.length >= 2) {
+        if (!leftSite) handleLeftSiteChange(uniqueUrls[0]);
+        if (!rightSite) handleRightSiteChange(uniqueUrls[1]);
+    } else if (uniqueUrls.length === 1) {
+        if (!leftSite) handleLeftSiteChange(uniqueUrls[0]);
+        if (!rightSite) handleRightSiteChange(uniqueUrls[0]);
+    }
+  };
+
+  const handleLeftSiteChange = (site: string) => {
+    setLeftSite(site);
+    const shots = grouped[site];
+    if (shots && shots.length > 0) setLeftShot(shots[0]); 
+  };
+
+  const handleRightSiteChange = (site: string) => {
+    setRightSite(site);
+    const shots = grouped[site];
+    if (shots && shots.length > 0) setRightShot(shots[0]);
+  };
+
+  // --- Dialog Backdrop Click Handler ---
+  // Clicking the ::backdrop pseudo-element registers as a click on the <dialog> itself
+  const handleDialogClick = (e: React.MouseEvent<HTMLDialogElement>) => {
+    if (e.target === dialogRef.current) {
+        setSelectedShot(null);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-100">
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100">
-        <div className="max-w-[1600px] mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-6 bg-slate-900 rounded-full"></div>
-            <h1 className="text-lg font-bold tracking-tight">Kiosk 24/7</h1>
+    <div className="min-h-screen bg-white text-neutral-900 font-sans tracking-tight selection:bg-neutral-200">
+      
+      {/* --- Sticky Header --- */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <h1 className="text-sm font-bold uppercase tracking-widest hidden sm:block">Kiosk 24/7</h1>
+            <h1 className="text-sm font-bold uppercase tracking-widest sm:hidden">Kiosk</h1>
+            
+            {!loading && uniqueUrls.length > 0 && (
+                <button 
+                    onClick={openVersusMode}
+                    className="text-[10px] font-bold uppercase tracking-wide bg-black text-white px-3 py-1.5 rounded-full hover:bg-neutral-800 transition active:scale-95"
+                >
+                    Versus Mode
+                </button>
+            )}
           </div>
 
           <div className="relative" ref={calendarRef}>
             <button
               onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 transition text-sm font-medium text-slate-700"
+              className="text-sm font-medium hover:text-gray-500 transition-colors flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full"
             >
-              <span className="text-base leading-none">📅</span>
-              <span>{format(date, "MMM dd, yyyy")}</span>
+              <span>{format(date, "MMM d")}</span>
+              <span className="text-[10px] transform rotate-90 opacity-40">❯</span>
             </button>
 
             {isCalendarOpen && (
-              <div className="absolute top-full right-0 mt-4 bg-white border border-slate-100 rounded-2xl shadow-2xl p-4 z-50 animate-in fade-in zoom-in-95 duration-200">
+              <div className="absolute top-full right-0 mt-4 bg-white border border-gray-100 rounded-xl shadow-2xl p-4 z-50 animate-in fade-in zoom-in-95 duration-200">
                 <DayPicker
                   mode="single"
                   selected={date}
                   onSelect={(d) => {
-                    if (d) {
-                      setDate(d);
-                      setIsCalendarOpen(false);
-                    }
+                    if (d) { setDate(d); setIsCalendarOpen(false); }
                   }}
                   modifiers={{ hasData: activeDates }}
                   modifiersStyles={{
-                    hasData: {
-                      fontWeight: "bold",
-                      color: "#0f172a",
-                      backgroundColor: "#f1f5f9",
-                      borderRadius: "100%",
-                    },
-                    selected: {
-                      backgroundColor: "#000",
-                      color: "#fff",
-                    }
+                    hasData: { fontWeight: "700", textDecoration: "underline" },
+                    selected: { backgroundColor: "#000", color: "#fff", borderRadius: "0" }
                   }}
                   disabled={{ after: new Date() }}
                 />
@@ -189,155 +238,211 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-[1600px] mx-auto px-4 py-8 space-y-12">
+      <main className="max-w-7xl mx-auto pb-12 space-y-8">
+        
+        {/* --- Top Horizontal Navigation --- */}
         {!loading && uniqueUrls.length > 0 && (
-          <nav className="flex flex-wrap gap-2">
-            {uniqueUrls.map((url) => {
-              const isActive = visibleUrls.includes(url);
-              return (
-                <button
-                  key={url}
-                  onClick={() => toggleUrl(url)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 border
-                    ${isActive
-                      ? "bg-slate-900 text-white border-slate-900 shadow-md transform scale-105"
-                      : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-900"
-                    }`}
-                >
-                  {url}
-                </button>
-              );
-            })}
-          </nav>
-        )}
-
-        {loading && (
-          <div className="py-20 flex justify-center">
-            <div className="animate-pulse flex flex-col items-center gap-4">
-              <div className="h-2 w-24 bg-slate-200 rounded"></div>
-              <div className="h-64 w-96 bg-slate-100 rounded-xl"></div>
-            </div>
+          <div className="sticky top-16 z-30 bg-white/95 backdrop-blur border-b border-gray-50 py-3">
+             <Swiper
+                slidesPerView="auto"
+                spaceBetween={8}
+                freeMode={true}
+                grabCursor={true}
+                modules={[FreeMode, Mousewheel]}
+                mousewheel={{ forceToAxis: true }}
+                className="px-4 md:px-6"
+             >
+                {uniqueUrls.map((url) => {
+                const isActive = visibleUrls.includes(url);
+                return (
+                    <SwiperSlide key={url} className="!w-auto">
+                        <button
+                        onClick={() => toggleUrl(url)}
+                        className={`px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 active:scale-95 whitespace-nowrap
+                            ${isActive 
+                            ? "bg-black text-white shadow-md" 
+                            : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-black"}`}
+                        >
+                        {url}
+                        </button>
+                    </SwiperSlide>
+                );
+                })}
+            </Swiper>
           </div>
         )}
 
+        {/* Loading / Empty States */}
+        {loading && <div className="py-20 text-center text-sm text-gray-400 animate-pulse">Syncing timestamps...</div>}
+        
         {!loading && uniqueUrls.length > 0 && displayedSites.length === 0 && (
-          <div className="text-center py-20 text-slate-400">
-            Select a source above to begin.
-          </div>
+          <div className="py-20 text-center text-sm text-gray-400">Tap a site above to begin.</div>
         )}
 
-        {displayedSites.map(([url, shots]) => (
-          <section
-            key={url}
-            id={url}
-            className="group animate-in fade-in slide-in-from-bottom-4 duration-700"
-          >
-            <div className="flex items-baseline gap-3 mb-4 px-1">
-              <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-                {url}
-              </h2>
-              <span className="text-xs font-medium text-slate-400">
-                {shots.length} updates
-              </span>
-              <div className="h-px bg-slate-100 flex-grow ml-4"></div>
-            </div>
-
-            <div className="flex overflow-x-auto gap-5 pb-8 -mx-4 px-4 scrollbar-hide snap-x">
-              {shots.map((shot) => (
-                <button
-                  key={shot.id}
-                  onClick={() => setSelectedShot(shot)}
-                  className="relative flex-none w-72 sm:w-80 aspect-video rounded-xl overflow-hidden bg-slate-100 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 snap-start group/card cursor-zoom-in text-left"
+        {/* Content Rows */}
+        <div className="px-4 md:px-6 space-y-10">
+            {displayedSites.map(([url, shots]) => (
+            <section key={url} id={url} className="group animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
+                <h2 className="text-sm font-bold text-black tracking-tight">{url}</h2>
+                <span className="text-[10px] font-mono text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">{shots.length}</span>
+                </div>
+                
+                <Swiper
+                    slidesPerView="auto"
+                    spaceBetween={16}
+                    freeMode={true}
+                    grabCursor={true}
+                    simulateTouch={true}
+                    mousewheel={{ forceToAxis: true }}
+                    modules={[FreeMode, Mousewheel]}
+                    className="!pb-4 !overflow-visible" 
                 >
-                  {shot.cloudinary_url ? (
-                    <img
-                      src={optimizedImage(shot.cloudinary_url, 600)}
-                      alt={`${url} at ${shot.captured_at}`}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-105"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-slate-300">
-                      <span className="text-xs">No Image</span>
-                    </div>
-                  )}
-
-                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
-
-                  <div className="absolute top-3 right-3 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300">
-                    <div className="bg-black/50 w-8 h-8 flex items-center justify-center rounded-full text-white backdrop-blur-sm">
-                      <span className="text-lg leading-none pb-1">⤢</span>
-                    </div>
-                  </div>
-
-                  <div className="absolute bottom-3 left-3 flex items-center gap-1.5">
-                    <span className="bg-white/90 backdrop-blur-md text-slate-900 text-[10px] font-bold px-2 py-1 rounded-md shadow-sm">
-                      {formatTime(shot.captured_at)}
-                    </span>
-                  </div>
-                </button>
-              ))}
-              <div className="w-4 flex-none"></div>
-            </div>
-          </section>
-        ))}
+                    {shots.map((shot) => (
+                        <SwiperSlide key={shot.id} className="!w-auto">
+                            <div
+                                onClick={() => setSelectedShot(shot)}
+                                className="relative w-64 sm:w-72 aspect-video bg-gray-50 overflow-hidden rounded-md transition-transform active:scale-[0.98] text-left group/card shadow-sm border border-gray-100 block cursor-pointer select-none"
+                            >
+                                {shot.cloudinary_url ? (
+                                    <img
+                                        src={optimizedImage(shot.cloudinary_url, 600)}
+                                        alt=""
+                                        draggable={false}
+                                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                                        loading="lazy"
+                                    />
+                                ) : (
+                                    <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-300">NO SIGNAL</div>
+                                )}
+                                <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur px-2 py-1 rounded-sm shadow-sm">
+                                    <span className="text-[10px] font-bold text-black uppercase tracking-wider font-mono">
+                                        {formatTime(shot.captured_at)}
+                                    </span>
+                                </div>
+                            </div>
+                        </SwiperSlide>
+                    ))}
+                </Swiper>
+            </section>
+            ))}
+        </div>
       </main>
 
-      {selectedShot && selectedShot.cloudinary_url && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-200"
-          onClick={() => setSelectedShot(null)}
-        >
-          <button
-            onClick={() => setSelectedShot(null)}
-            className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 text-white rounded-full transition z-50"
-          >
-            <span className="text-3xl leading-none pb-1">&times;</span>
-          </button>
+      {/* --- NEW DIALOG IMPLEMENTATION --- 
+         This uses the native HTML <dialog> element.
+         The Tailwind classes ensure it fills the screen completely (w-screen h-screen)
+         and the flexbox inside ensures the image is contained.
+      */}
+      <dialog 
+        ref={dialogRef}
+        onClose={() => setSelectedShot(null)}
+        onClick={handleDialogClick}
+        className="w-screen h-screen max-w-none max-h-none m-0 bg-transparent p-0 outline-none backdrop:bg-black/95 backdrop:backdrop-blur-sm open:animate-in open:fade-in open:zoom-in-95 duration-200"
+      >
+        {selectedShot && (
+            <div className="w-full overflow-hidden h-full flex flex-col items-center justify-between">
+                
+                {/* 1. Close Button (Absolute Top Right) */}
+                <button 
+                    onClick={() => setSelectedShot(null)}
+                    autoFocus 
+                    className="absolute top-4 right-4 z-50 w-10 h-10 flex items-center justify-center bg-white/10 text-white rounded-full hover:bg-white/20 transition active:scale-90"
+                >
+                    <span className="text-2xl leading-none pb-1">&times;</span>
+                </button>
 
-          {currentIndex > 0 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePrev();
-              }}
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 text-white rounded-full transition z-50 group"
-            >
-              <span className="text-3xl leading-none pb-1 group-hover:-translate-x-0.5 transition-transform">&larr;</span>
-            </button>
-          )}
+                {/* 2. Image Container (Flex Grow + Min-Height 0) */}
+                {/* min-h-0 is the MAGIC FIX for mobile flex overflow issues */}
+                <div className="flex-1 w-full min-h-0 p-4 flex items-center justify-center">
+                    {selectedShot.cloudinary_url && (
+                        <img 
+                            src={optimizedImage(selectedShot.cloudinary_url, 1600)} 
+                            alt={selectedShot.url}
+                            className="max-w-full max-h-full object-contain shadow-2xl rounded"
+                        />
+                    )}
+                </div>
 
-          {currentIndex < currentGroup.length - 1 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleNext();
-              }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 text-white rounded-full transition z-50 group"
-            >
-              <span className="text-3xl leading-none pb-1 group-hover:translate-x-0.5 transition-transform">&rarr;</span>
-            </button>
-          )}
-
-          <div
-            className="relative w-full h-full flex flex-col items-center justify-center pointer-events-none"
-          >
-            <img
-              src={optimizedImage(selectedShot.cloudinary_url, 1600)}
-              alt="Full screenshot"
-              className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl pointer-events-auto"
-              onClick={(e) => e.stopPropagation()}
-            />
-
-            <div className="mt-4 flex flex-col items-center gap-1 pointer-events-auto">
-              <h3 className="text-white font-semibold text-lg">{selectedShot.url}</h3>
-              <div className="flex items-center gap-2 text-white/60 text-sm">
-                <span>{formatTime(selectedShot.captured_at)}</span>
-                <span>•</span>
-                <span>{currentIndex + 1} of {currentGroup.length}</span>
-              </div>
+                {/* 3. Footer info */}
+                <div className="flex-none w-full p-6 text-center text-white/80 bg-gradient-to-t from-black/50 to-transparent">
+                    <h3 className="text-sm font-bold tracking-widest uppercase">{selectedShot.url}</h3>
+                    <p className="text-xs font-mono opacity-70 mt-1">{formatTime(selectedShot.captured_at)}</p>
+                </div>
             </div>
-          </div>
+        )}
+      </dialog>
+
+      {/* --- Responsive Versus Mode --- */}
+      {isVersusOpen && (
+        <div className="fixed inset-0 z-50 bg-white flex flex-col animate-in slide-in-from-bottom-10 duration-300">
+            
+            {/* Header */}
+            <div className="flex-none h-14 border-b border-gray-100 px-4 flex items-center justify-between bg-white z-10">
+                <div className="flex items-center gap-4">
+                    <h2 className="text-sm font-bold uppercase tracking-widest">Versus Mode</h2>
+                    <button 
+                        onClick={() => setShowControls(!showControls)}
+                        className="text-[10px] font-bold uppercase tracking-wide bg-gray-100 px-3 py-1 rounded hover:bg-gray-200 transition"
+                    >
+                        {showControls ? "Hide Options" : "Show Options"}
+                    </button>
+                </div>
+                <button 
+                    onClick={() => setIsVersusOpen(false)}
+                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
+                >
+                    <span className="text-xl leading-none pb-1">&times;</span>
+                </button>
+            </div>
+
+            {/* Split Main Area */}
+            <div className="flex-grow flex flex-col md:flex-row h-full overflow-hidden">
+                {/* 1. Desktop Sidebar */}
+                <aside className={`hidden md:flex flex-col border-r border-gray-100 bg-gray-50/50 transition-all duration-300 overflow-hidden ${showControls ? "w-80 opacity-100" : "w-0 opacity-0 border-none"}`}>
+                    <div className="flex-1 flex flex-col overflow-hidden min-w-[320px]">
+                        <div className="flex-1 p-6 overflow-y-auto border-b border-gray-200">
+                             <label className="text-[10px] font-bold uppercase text-gray-400 block mb-2">Left Side</label>
+                             <select value={leftSite} onChange={(e) => handleLeftSiteChange(e.target.value)} className="w-full mb-4 p-2 text-sm bg-white border border-gray-200 rounded outline-none">{uniqueUrls.map(u => <option key={u} value={u}>{u}</option>)}</select>
+                            <div className="flex flex-wrap gap-2">{grouped[leftSite]?.map(shot => (<button key={`l-${shot.id}`} onClick={() => setLeftShot(shot)} className={`px-2 py-1 text-[10px] font-mono border rounded ${leftShot?.id === shot.id ? "bg-black text-white border-black" : "bg-white border-gray-200"}`}>{formatTime(shot.captured_at)}</button>))}</div>
+                        </div>
+                        <div className="flex-1 p-6 overflow-y-auto bg-white">
+                             <label className="text-[10px] font-bold uppercase text-gray-400 block mb-2">Right Side</label>
+                             <select value={rightSite} onChange={(e) => handleRightSiteChange(e.target.value)} className="w-full mb-4 p-2 text-sm bg-gray-50 border border-gray-200 rounded outline-none">{uniqueUrls.map(u => <option key={u} value={u}>{u}</option>)}</select>
+                            <div className="flex flex-wrap gap-2">{grouped[rightSite]?.map(shot => (<button key={`r-${shot.id}`} onClick={() => setRightShot(shot)} className={`px-2 py-1 text-[10px] font-mono border rounded ${rightShot?.id === shot.id ? "bg-black text-white border-black" : "bg-white border-gray-200"}`}>{formatTime(shot.captured_at)}</button>))}</div>
+                        </div>
+                    </div>
+                </aside>
+                {/* 2. The Stage */}
+                <div className="flex-grow relative bg-gray-50/50 flex items-center justify-center overflow-hidden touch-none p-4">
+                    {leftShot && rightShot && leftShot.cloudinary_url && rightShot.cloudinary_url ? (
+                        <div className="relative w-full h-full shadow-2xl rounded-lg overflow-hidden border border-gray-200">
+                             <ReactCompareSlider
+                                itemOne={<ReactCompareSliderImage src={optimizedImage(leftShot.cloudinary_url, 1600)} alt="Left" style={{ objectFit: 'contain', width: '100%', height: '100%', backgroundColor: '#f9fafb' }} />}
+                                itemTwo={<ReactCompareSliderImage src={optimizedImage(rightShot.cloudinary_url, 1600)} alt="Right" style={{ objectFit: 'contain', width: '100%', height: '100%', backgroundColor: '#f9fafb' }} />}
+                                style={{ height: "100%", width: "100%" }}
+                            />
+                        </div>
+                    ) : (<div className="text-gray-400 text-xs tracking-widest">Select comparison data</div>)}
+                </div>
+            </div>
+
+            {/* 3. Mobile Bottom Sheet */}
+            <div className={`md:hidden flex-none bg-white border-t border-gray-100 flex flex-col pb-safe transition-all duration-300 ${showControls ? "h-auto border-t" : "h-0 overflow-hidden border-none"}`}>
+                <div className="flex border-b border-gray-100">
+                    <button onClick={() => setMobileActiveSide("left")} className={`flex-1 py-3 text-xs font-bold uppercase tracking-wide border-b-2 transition-colors ${mobileActiveSide === "left" ? "border-black text-black bg-gray-50" : "border-transparent text-gray-400"}`}>Left Side</button>
+                    <div className="w-px bg-gray-100"></div>
+                    <button onClick={() => setMobileActiveSide("right")} className={`flex-1 py-3 text-xs font-bold uppercase tracking-wide border-b-2 transition-colors ${mobileActiveSide === "right" ? "border-black text-black bg-gray-50" : "border-transparent text-gray-400"}`}>Right Side</button>
+                </div>
+                <div className="p-4 h-48 overflow-y-auto">
+                    <div className="mb-4">
+                        <select value={mobileActiveSide === "left" ? leftSite : rightSite} onChange={(e) => mobileActiveSide === "left" ? handleLeftSiteChange(e.target.value) : handleRightSiteChange(e.target.value)} className="w-full p-2 bg-gray-50 border border-gray-200 rounded text-sm font-medium outline-none focus:border-black transition">{uniqueUrls.map(u => <option key={u} value={u}>{u}</option>)}</select>
+                    </div>
+                    <div>
+                        <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">{(mobileActiveSide === "left" ? grouped[leftSite] : grouped[rightSite])?.map(shot => { const isSelected = mobileActiveSide === "left" ? leftShot?.id === shot.id : rightShot?.id === shot.id; return (<button key={shot.id} onClick={() => mobileActiveSide === "left" ? setLeftShot(shot) : setRightShot(shot)} className={`flex-none px-3 py-2 text-xs font-mono border rounded-lg transition-all active:scale-95 ${isSelected ? "bg-black text-white border-black shadow-md" : "bg-white text-gray-500 border-gray-200"}`}>{formatTime(shot.captured_at)}</button>); })}</div>
+                    </div>
+                </div>
+            </div>
         </div>
       )}
     </div>
