@@ -90,6 +90,11 @@ def get_js_cleanup():
         [data-qa="AppBar-renderLayout-AdSlotContainer"],
         [data-qa="GDPRBanner-Container"],
         [data-qa="HomePage-FirstAds"],
-        .iubenda-cs-black
+        .iubenda-cs-black,
+        .dfp-leaderboard-container,
+        [id^="arcad-feature"],
+        .StickyAdWrapper,
+        [class^="bcpNotificationBar"],
+        .u-sticky-target
     `).forEach(e => e.remove());
     """

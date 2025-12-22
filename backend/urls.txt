@@ -1,3 +1,9 @@
+apnews.com
+abcnews.com
+skynews.com
+nytimes.com
+irishtimes.com
+livescience.com
 scmp.com
 japantoday.com
 theguardian.com
