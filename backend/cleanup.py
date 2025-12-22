@@ -1,5 +1,7 @@
 def get_js_cleanup():
     return """
+    document.body.classList.remove("didomi-popup-open")
+
     document.querySelectorAll(`
         .ad-slot-module__container__VEdre,
         .container--ads,
@@ -71,6 +73,7 @@ def get_js_cleanup():
         .fc-consent-root,
         .ad__container,
         .qc-cmp2-container,
+        .pub-container,
         .fides-overlay,
         .ad-stickyhero,
         .app-0-0-2,
@@ -95,6 +98,22 @@ def get_js_cleanup():
         [id^="arcad-feature"],
         .StickyAdWrapper,
         [class^="bcpNotificationBar"],
-        .u-sticky-target
+        .u-sticky-target,
+        .TopBanner-container,
+        [class^="didomi-"],
+        [class^="o-ad-container"],
+        #billboard-wrapper,
+        [aria-label="Plansza informacyjna WP"],
+        .flow-root,
+        .DFP-premiumBoardReservedPlace,
+        .--only-advert,
+        .page-homepage-billboard-1,
+        [class^="app_gdpr"],
+        .infor-ad,
+        [class*="home-autopromo-link"],
+        [data-test="top-ad"],
+        [data-pogo="top"],
+        #sd-cmp,
+        .banner
     `).forEach(e => e.remove());
     """

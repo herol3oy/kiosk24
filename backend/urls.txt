@@ -1,3 +1,14 @@
+gizmodo.com
+mashable.com
+engadget.com
+gazeta.pl
+rp.pl
+cnbc.com
+france24.com
+independent.co.uk
+wprost.pl
+gazetaprawna.pl
+wpolityce.pl
 apnews.com
 abcnews.com
 skynews.com
