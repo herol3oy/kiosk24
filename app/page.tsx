@@ -1,22 +1,31 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { DayPicker } from "react-day-picker";
 import { format } from "date-fns";
-import { ReactCompareSlider, ReactCompareSliderImage } from "react-compare-slider";
+import { Iceland } from "next/font/google";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 
-// --- Swiper Imports ---
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { FreeMode, Mousewheel } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/free-mode';
+import {
+  ReactCompareSlider,
+  ReactCompareSliderImage,
+} from "react-compare-slider";
+import { DayPicker } from "react-day-picker";
+import { FreeMode, Mousewheel } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import "swiper/css/free-mode";
 import "react-day-picker/dist/style.css";
+
+const geistSans = Iceland({
+  variable: "--font-iceland-sans",
+  weight: "400",
+});
 
 // --- Configuration ---
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "",
 );
 
 const DEFAULT_SITES = ["theguardian.com", "bbc.com", "aljazeera.com"];
@@ -35,13 +44,6 @@ function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
-  });
-}
-
-function formatDateDetail(iso: string) {
-  return new Date(iso).toLocaleDateString([], {
-    month: 'short',
-    day: 'numeric'
   });
 }
 
@@ -66,7 +68,9 @@ export default function Home() {
   const [isVersusOpen, setIsVersusOpen] = useState(false);
   const [showControls, setShowControls] = useState(true);
 
-  const [mobileActiveSide, setMobileActiveSide] = useState<"left" | "right">("left");
+  const [mobileActiveSide, setMobileActiveSide] = useState<"left" | "right">(
+    "left",
+  );
   const [leftSite, setLeftSite] = useState<string>("");
   const [leftShot, setLeftShot] = useState<Screenshot | null>(null);
   const [rightSite, setRightSite] = useState<string>("");
@@ -132,7 +136,10 @@ export default function Home() {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
+      if (
+        calendarRef.current &&
+        !calendarRef.current.contains(event.target as Node)
+      ) {
         setIsCalendarOpen(false);
       }
     }
@@ -150,12 +157,12 @@ export default function Home() {
 
   const toggleUrl = (url: string) => {
     setVisibleUrls((prev) =>
-      prev.includes(url) ? prev.filter((u) => u !== url) : [...prev, url]
+      prev.includes(url) ? prev.filter((u) => u !== url) : [...prev, url],
     );
   };
 
   const displayedSites = Object.entries(grouped).filter(([url]) =>
-    visibleUrls.includes(url)
+    visibleUrls.includes(url),
   );
 
   // --- Versus Logic ---
@@ -219,8 +226,7 @@ export default function Home() {
 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [selectedShot, currentIndex]);
-
+  }, [selectedShot]);
 
   useEffect(() => {
     const saved = localStorage.getItem("deviceMode");
@@ -233,18 +239,21 @@ export default function Home() {
     localStorage.setItem("deviceMode", deviceMode);
   }, [deviceMode]);
 
-
   return (
     <div className="min-h-screen bg-white text-neutral-900 font-sans tracking-tight selection:bg-neutral-200 overflow-hidden">
-
       {/* --- Sticky Header --- */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100">
         <div className="mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h1 className="text-sm font-bold uppercase tracking-widest">Kiosk24</h1>
+            <h1
+              className={`text-sm font-bold uppercase tracking-widest ${geistSans.className} `}
+            >
+              Kiosk24
+            </h1>
 
             {!loading && uniqueUrls.length > 0 && (
               <button
+                type="button"
                 onClick={openVersusMode}
                 className="
     text-xs font-bold uppercase tracking-wider text-white
@@ -258,40 +267,47 @@ export default function Home() {
               >
                 Versus Mode
               </button>
-
             )}
           </div>
 
           <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1">
             <button
+              type="button"
               onClick={() => setDeviceMode("desktop")}
               className={`px-3 py-1 text-xs font-bold uppercase rounded-full transition
-      ${deviceMode === "desktop"
-                  ? "bg-black text-white"
-                  : "text-gray-500 hover:text-black"}`}
+      ${
+        deviceMode === "desktop"
+          ? "bg-black text-white"
+          : "text-gray-500 hover:text-black"
+      }`}
             >
               Desktop
             </button>
 
             <button
+              type="button"
               onClick={() => setDeviceMode("mobile")}
               className={`px-3 py-1 text-xs font-bold uppercase rounded-full transition
-      ${deviceMode === "mobile"
-                  ? "bg-black text-white"
-                  : "text-gray-500 hover:text-black"}`}
+      ${
+        deviceMode === "mobile"
+          ? "bg-black text-white"
+          : "text-gray-500 hover:text-black"
+      }`}
             >
               Mobile
             </button>
           </div>
 
-
           <div className="relative" ref={calendarRef}>
             <button
+              type="button"
               onClick={() => setIsCalendarOpen(!isCalendarOpen)}
               className="text-sm font-medium hover:text-gray-500 transition-colors flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full"
             >
               <span>{format(date, "MMM d")}</span>
-              <span className="text-[10px] transform rotate-90 opacity-40">❯</span>
+              <span className="text-[10px] transform rotate-90 opacity-40">
+                ❯
+              </span>
             </button>
 
             {isCalendarOpen && (
@@ -300,12 +316,19 @@ export default function Home() {
                   mode="single"
                   selected={date}
                   onSelect={(d) => {
-                    if (d) { setDate(d); setIsCalendarOpen(false); }
+                    if (d) {
+                      setDate(d);
+                      setIsCalendarOpen(false);
+                    }
                   }}
                   modifiers={{ hasData: activeDates }}
                   modifiersStyles={{
                     hasData: { fontWeight: "700", textDecoration: "underline" },
-                    selected: { backgroundColor: "#000", color: "#fff", borderRadius: "0" }
+                    selected: {
+                      backgroundColor: "#000",
+                      color: "#fff",
+                      borderRadius: "0",
+                    },
                   }}
                   disabled={{ after: new Date() }}
                 />
@@ -316,19 +339,17 @@ export default function Home() {
       </header>
 
       <main className="mx-auto pb-12 space-y-8">
-
         {/* --- Top Horizontal Navigation (With Favicons) --- */}
         {!loading && uniqueUrls.length > 0 && (
           <div className="sticky top-16 z-30 bg-white/95 backdrop-blur border-b border-gray-50 py-3">
-
             {/* Toggle button — mobile only */}
             <button
+              type="button"
               onClick={() => setShowUrls((prev) => !prev)}
               className="md:hidden mx-auto mb-3 flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-xs font-medium text-gray-700 hover:bg-gray-200 transition"
             >
               {showUrls ? "Hide sources" : "Show sources"}
             </button>
-
 
             {/* Collapsible container */}
             <div
@@ -342,15 +363,17 @@ export default function Home() {
 
                   return (
                     <button
+                      type="button"
                       key={url}
                       onClick={() => toggleUrl(url)}
                       className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 active:scale-95 whitespace-nowrap
-                ${isActive
-                          ? "bg-black text-white shadow-md"
-                          : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-black"
-                        }`}
+                ${
+                  isActive
+                    ? "bg-black text-white shadow-md"
+                    : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-black"
+                }`}
                     >
-                      <img
+                      <Image
                         src={`https://www.google.com/s2/favicons?domain=${url}&sz=64`}
                         alt=""
                         className="w-4 h-4 rounded-sm object-contain opacity-90"
@@ -361,32 +384,45 @@ export default function Home() {
                 })}
               </div>
             </div>
-
           </div>
         )}
 
         {/* Loading / Empty States */}
-        {loading && <div className="py-20 text-center text-sm text-gray-400 animate-pulse">Syncing timestamps...</div>}
+        {loading && (
+          <div className="py-20 text-center text-sm text-gray-400 animate-pulse">
+            Syncing timestamps...
+          </div>
+        )}
 
         {!loading && uniqueUrls.length > 0 && displayedSites.length === 0 && (
-          <div className="py-20 text-center text-sm text-gray-400">Tap a site above to begin.</div>
+          <div className="py-20 text-center text-sm text-gray-400">
+            Tap a site above to begin.
+          </div>
         )}
 
         {/* Content Rows */}
         <div className="px-4 md:px-6 space-y-10">
           {displayedSites.map(([url, shots]) => (
-            <section key={url} id={url} className="group animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <section
+              key={url}
+              id={url}
+              className="group animate-in fade-in slide-in-from-bottom-4 duration-700"
+            >
               <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
                 {/* Header with Favicon */}
                 <div className="flex items-center gap-2">
-                  <img
+                  <Image
                     src={`https://www.google.com/s2/favicons?domain=${url}&sz=64`}
                     alt=""
                     className="w-4 h-4 rounded-sm object-contain"
                   />
-                  <h2 className="text-sm font-bold text-black tracking-tight">{url}</h2>
+                  <h2 className="text-sm font-bold text-black tracking-tight">
+                    {url}
+                  </h2>
                 </div>
-                <span className="text-[10px] font-mono text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">{shots.length}</span>
+                <span className="text-[10px] font-mono text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">
+                  {shots.length}
+                </span>
               </div>
 
               <Swiper
@@ -410,9 +446,10 @@ export default function Home() {
                               text-left group/card shadow-sm border border-gray-100
                               block cursor-pointer select-none 
                               ${deviceMode === "mobile" ? "aspect-9/16" : "aspect-video"}
-                            `}                    >
+                            `}
+                    >
                       {shot.cloudinary_url ? (
-                        <img
+                        <Image
                           src={optimizedImage(shot.cloudinary_url, 600)}
                           alt=""
                           draggable={false}
@@ -420,7 +457,9 @@ export default function Home() {
                           loading="lazy"
                         />
                       ) : (
-                        <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-300">NO SIGNAL</div>
+                        <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-300">
+                          NO SIGNAL
+                        </div>
                       )}
                       <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur px-2 py-1 rounded-sm shadow-sm">
                         <span className="text-[10px] font-bold text-black uppercase tracking-wider font-mono">
@@ -445,11 +484,10 @@ export default function Home() {
       >
         {selectedShot && (
           <div className="w-full overflow-hidden h-full flex flex-col items-center justify-between">
-
             {/* 1. Close Button (Absolute Top Right) */}
             <button
+              type="button"
               onClick={() => setSelectedShot(null)}
-              autoFocus
               className="absolute top-4 right-4 z-50 w-10 h-10 flex items-center justify-center bg-white/10 text-white rounded-full hover:bg-white/20 transition active:scale-90"
             >
               <span className="text-2xl leading-none pb-1">&times;</span>
@@ -457,6 +495,7 @@ export default function Home() {
 
             {/* Left Arrow */}
             <button
+              type="button"
               onClick={goPrev}
               disabled={currentIndex <= 0}
               className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-40
@@ -471,6 +510,7 @@ export default function Home() {
 
             {/* Right Arrow */}
             <button
+              type="button"
               onClick={goNext}
               disabled={currentIndex >= flatShots.length - 1}
               className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-40
@@ -483,30 +523,32 @@ export default function Home() {
               <span className="text-3xl leading-none">&#10095;</span>
             </button>
 
-
             {/* 2. Image Container (Flex Grow + Min-Height 0) */}
             <div className="flex-1 w-full min-h-0 p-4 flex items-center justify-center relative">
               {selectedShot.cloudinary_url && (
-                <img
+                <Image
                   src={optimizedImage(selectedShot.cloudinary_url, 1600)}
                   alt={selectedShot.url}
                   className="max-w-full max-h-full object-contain shadow-2xl rounded z-10"
                 />
-
               )}
             </div>
 
             {/* 3. Footer info (With Favicon) */}
             <div className="flex-none w-full p-6 text-center text-white/80 bg-gradient-to-t from-black/50 to-transparent">
               <div className="flex items-center justify-center gap-2">
-                <img
+                <Image
                   src={`https://www.google.com/s2/favicons?domain=${selectedShot.url}&sz=64`}
                   alt=""
                   className="w-4 h-4 rounded-sm object-contain opacity-80"
                 />
-                <h3 className="text-sm font-bold tracking-widest uppercase">{selectedShot.url}</h3>
+                <h3 className="text-sm font-bold tracking-widest uppercase">
+                  {selectedShot.url}
+                </h3>
               </div>
-              <p className="text-xs font-mono opacity-70 mt-1">{formatTime(selectedShot.captured_at)}</p>
+              <p className="text-xs font-mono opacity-70 mt-1">
+                {formatTime(selectedShot.captured_at)}
+              </p>
             </div>
           </div>
         )}
@@ -515,12 +557,14 @@ export default function Home() {
       {/* --- Responsive Versus Mode --- */}
       {isVersusOpen && (
         <div className="fixed inset-0 z-50 bg-white flex flex-col animate-in slide-in-from-bottom-10 duration-300">
-
           {/* Header */}
           <div className="flex-none h-14 border-b border-gray-100 px-4 flex items-center justify-between bg-white z-10">
             <div className="flex items-center gap-4">
-              <h2 className="text-sm font-bold uppercase tracking-widest">Versus Mode</h2>
+              <h2 className="text-sm font-bold uppercase tracking-widest">
+                Versus Mode
+              </h2>
               <button
+                type="button"
                 onClick={() => setShowControls(!showControls)}
                 className="text-[10px] font-bold uppercase tracking-wide bg-gray-100 px-3 py-1 rounded hover:bg-gray-200 transition"
               >
@@ -528,6 +572,7 @@ export default function Home() {
               </button>
             </div>
             <button
+              type="button"
               onClick={() => setIsVersusOpen(false)}
               className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
             >
@@ -538,47 +583,188 @@ export default function Home() {
           {/* Split Main Area */}
           <div className="flex-grow flex flex-col md:flex-row h-full overflow-hidden">
             {/* 1. Desktop Sidebar */}
-            <aside className={`hidden md:flex flex-col border-r border-gray-100 bg-gray-50/50 transition-all duration-300 overflow-hidden ${showControls ? "w-80 opacity-100" : "w-0 opacity-0 border-none"}`}>
+            <aside
+              className={`hidden md:flex flex-col border-r border-gray-100 bg-gray-50/50 transition-all duration-300 overflow-hidden ${showControls ? "w-80 opacity-100" : "w-0 opacity-0 border-none"}`}
+            >
               <div className="flex-1 flex flex-col overflow-hidden min-w-[320px]">
                 <div className="flex-1 p-6 overflow-y-auto border-b border-gray-200">
-                  <label className="text-[10px] font-bold uppercase text-gray-400 block mb-2">Left Side</label>
-                  <select value={leftSite} onChange={(e) => handleLeftSiteChange(e.target.value)} className="w-full mb-4 p-2 text-sm bg-white border border-gray-200 rounded outline-none">{uniqueUrls.map(u => <option key={u} value={u}>{u}</option>)}</select>
-                  <div className="flex flex-wrap gap-2">{grouped[leftSite]?.map(shot => (<button key={`l-${shot.id}`} onClick={() => setLeftShot(shot)} className={`px-2 py-1 text-[10px] font-mono border rounded ${leftShot?.id === shot.id ? "bg-black text-white border-black" : "bg-white border-gray-200"}`}>{formatTime(shot.captured_at)}</button>))}</div>
+                  <label
+                    htmlFor="left-side-select"
+                    className="text-[10px] font-bold uppercase text-gray-400 block mb-2"
+                  >
+                    Left Side
+                  </label>
+
+                  <select
+                    id="left-side-select"
+                    value={leftSite}
+                    onChange={(e) => handleLeftSiteChange(e.target.value)}
+                    className="w-full mb-4 p-2 text-sm bg-white border border-gray-200 rounded outline-none"
+                  >
+                    {uniqueUrls.map((u) => (
+                      <option key={u} value={u}>
+                        {u}
+                      </option>
+                    ))}
+                  </select>
+
+                  <div className="flex flex-wrap gap-2">
+                    {grouped[leftSite]?.map((shot) => (
+                      <button
+                        type="button"
+                        key={`l-${shot.id}`}
+                        onClick={() => setLeftShot(shot)}
+                        className={`px-2 py-1 text-[10px] font-mono border rounded ${leftShot?.id === shot.id ? "bg-black text-white border-black" : "bg-white border-gray-200"}`}
+                      >
+                        {formatTime(shot.captured_at)}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div className="flex-1 p-6 overflow-y-auto bg-white">
-                  <label className="text-[10px] font-bold uppercase text-gray-400 block mb-2">Right Side</label>
-                  <select value={rightSite} onChange={(e) => handleRightSiteChange(e.target.value)} className="w-full mb-4 p-2 text-sm bg-gray-50 border border-gray-200 rounded outline-none">{uniqueUrls.map(u => <option key={u} value={u}>{u}</option>)}</select>
-                  <div className="flex flex-wrap gap-2">{grouped[rightSite]?.map(shot => (<button key={`r-${shot.id}`} onClick={() => setRightShot(shot)} className={`px-2 py-1 text-[10px] font-mono border rounded ${rightShot?.id === shot.id ? "bg-black text-white border-black" : "bg-white border-gray-200"}`}>{formatTime(shot.captured_at)}</button>))}</div>
+                  <label
+                    htmlFor="right-side-select"
+                    className="text-[10px] font-bold uppercase text-gray-400 block mb-2"
+                  >
+                    Right Side
+                  </label>
+
+                  <select
+                    id="right-side-select"
+                    value={rightSite}
+                    onChange={(e) => handleRightSiteChange(e.target.value)}
+                    className="w-full mb-4 p-2 text-sm bg-gray-50 border border-gray-200 rounded outline-none"
+                  >
+                    {uniqueUrls.map((u) => (
+                      <option key={u} value={u}>
+                        {u}
+                      </option>
+                    ))}
+                  </select>
+
+                  <div className="flex flex-wrap gap-2">
+                    {grouped[rightSite]?.map((shot) => (
+                      <button
+                        type="button"
+                        key={`r-${shot.id}`}
+                        onClick={() => setRightShot(shot)}
+                        className={`px-2 py-1 text-[10px] font-mono border rounded ${rightShot?.id === shot.id ? "bg-black text-white border-black" : "bg-white border-gray-200"}`}
+                      >
+                        {formatTime(shot.captured_at)}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </aside>
             {/* 2. The Stage */}
             <div className="flex-grow relative bg-gray-50/50 flex items-center justify-center overflow-hidden touch-none p-4">
-              {leftShot && rightShot && leftShot.cloudinary_url && rightShot.cloudinary_url ? (
+              {leftShot &&
+              rightShot &&
+              leftShot.cloudinary_url &&
+              rightShot.cloudinary_url ? (
                 <div className="relative w-full h-full shadow-2xl rounded-lg overflow-hidden border border-gray-200">
                   <ReactCompareSlider
-                    itemOne={<ReactCompareSliderImage src={optimizedImage(leftShot.cloudinary_url, 1600)} alt="Left" style={{ objectFit: 'contain', width: '100%', height: '100%', backgroundColor: '#f9fafb' }} />}
-                    itemTwo={<ReactCompareSliderImage src={optimizedImage(rightShot.cloudinary_url, 1600)} alt="Right" style={{ objectFit: 'contain', width: '100%', height: '100%', backgroundColor: '#f9fafb' }} />}
+                    itemOne={
+                      <ReactCompareSliderImage
+                        src={optimizedImage(leftShot.cloudinary_url, 1600)}
+                        alt="Left"
+                        style={{
+                          objectFit: "contain",
+                          width: "100%",
+                          height: "100%",
+                          backgroundColor: "#f9fafb",
+                        }}
+                      />
+                    }
+                    itemTwo={
+                      <ReactCompareSliderImage
+                        src={optimizedImage(rightShot.cloudinary_url, 1600)}
+                        alt="Right"
+                        style={{
+                          objectFit: "contain",
+                          width: "100%",
+                          height: "100%",
+                          backgroundColor: "#f9fafb",
+                        }}
+                      />
+                    }
                     style={{ height: "100%", width: "100%" }}
                   />
                 </div>
-              ) : (<div className="text-gray-400 text-xs tracking-widest">Select comparison data</div>)}
+              ) : (
+                <div className="text-gray-400 text-xs tracking-widest">
+                  Select comparison data
+                </div>
+              )}
             </div>
           </div>
 
           {/* 3. Mobile Bottom Sheet */}
-          <div className={`md:hidden flex-none bg-white border-t border-gray-100 flex flex-col pb-safe transition-all duration-300 ${showControls ? "h-auto border-t" : "h-0 overflow-hidden border-none"}`}>
+          <div
+            className={`md:hidden flex-none bg-white border-t border-gray-100 flex flex-col pb-safe transition-all duration-300 ${showControls ? "h-auto border-t" : "h-0 overflow-hidden border-none"}`}
+          >
             <div className="flex border-b border-gray-100">
-              <button onClick={() => setMobileActiveSide("left")} className={`flex-1 py-3 text-xs font-bold uppercase tracking-wide border-b-2 transition-colors ${mobileActiveSide === "left" ? "border-black text-black bg-gray-50" : "border-transparent text-gray-400"}`}>Left Side</button>
+              <button
+                type="button"
+                onClick={() => setMobileActiveSide("left")}
+                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wide border-b-2 transition-colors ${mobileActiveSide === "left" ? "border-black text-black bg-gray-50" : "border-transparent text-gray-400"}`}
+              >
+                Left Side
+              </button>
               <div className="w-px bg-gray-100"></div>
-              <button onClick={() => setMobileActiveSide("right")} className={`flex-1 py-3 text-xs font-bold uppercase tracking-wide border-b-2 transition-colors ${mobileActiveSide === "right" ? "border-black text-black bg-gray-50" : "border-transparent text-gray-400"}`}>Right Side</button>
+              <button
+                type="button"
+                onClick={() => setMobileActiveSide("right")}
+                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wide border-b-2 transition-colors ${mobileActiveSide === "right" ? "border-black text-black bg-gray-50" : "border-transparent text-gray-400"}`}
+              >
+                Right Side
+              </button>
             </div>
             <div className="p-4 h-48 overflow-y-auto">
               <div className="mb-4">
-                <select value={mobileActiveSide === "left" ? leftSite : rightSite} onChange={(e) => mobileActiveSide === "left" ? handleLeftSiteChange(e.target.value) : handleRightSiteChange(e.target.value)} className="w-full p-2 bg-gray-50 border border-gray-200 rounded text-sm font-medium outline-none focus:border-black transition">{uniqueUrls.map(u => <option key={u} value={u}>{u}</option>)}</select>
+                <select
+                  value={mobileActiveSide === "left" ? leftSite : rightSite}
+                  onChange={(e) =>
+                    mobileActiveSide === "left"
+                      ? handleLeftSiteChange(e.target.value)
+                      : handleRightSiteChange(e.target.value)
+                  }
+                  className="w-full p-2 bg-gray-50 border border-gray-200 rounded text-sm font-medium outline-none focus:border-black transition"
+                >
+                  {uniqueUrls.map((u) => (
+                    <option key={u} value={u}>
+                      {u}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
-                <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">{(mobileActiveSide === "left" ? grouped[leftSite] : grouped[rightSite])?.map(shot => { const isSelected = mobileActiveSide === "left" ? leftShot?.id === shot.id : rightShot?.id === shot.id; return (<button key={shot.id} onClick={() => mobileActiveSide === "left" ? setLeftShot(shot) : setRightShot(shot)} className={`flex-none px-3 py-2 text-xs font-mono border rounded-lg transition-all active:scale-95 ${isSelected ? "bg-black text-white border-black shadow-md" : "bg-white text-gray-500 border-gray-200"}`}>{formatTime(shot.captured_at)}</button>); })}</div>
+                <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
+                  {(mobileActiveSide === "left"
+                    ? grouped[leftSite]
+                    : grouped[rightSite]
+                  )?.map((shot) => {
+                    const isSelected =
+                      mobileActiveSide === "left"
+                        ? leftShot?.id === shot.id
+                        : rightShot?.id === shot.id;
+                    return (
+                      <button
+                        type="button"
+                        key={shot.id}
+                        onClick={() =>
+                          mobileActiveSide === "left"
+                            ? setLeftShot(shot)
+                            : setRightShot(shot)
+                        }
+                        className={`flex-none px-3 py-2 text-xs font-mono border rounded-lg transition-all active:scale-95 ${isSelected ? "bg-black text-white border-black shadow-md" : "bg-white text-gray-500 border-gray-200"}`}
+                      >
+                        {formatTime(shot.captured_at)}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
