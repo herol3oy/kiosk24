@@ -281,7 +281,7 @@ export default function Home() {
           : "text-gray-500 hover:text-black"
       }`}
             >
-              Desktop
+              🖥️ Desktop
             </button>
 
             <button
@@ -294,7 +294,7 @@ export default function Home() {
           : "text-gray-500 hover:text-black"
       }`}
             >
-              Mobile
+              📱 Mobile
             </button>
           </div>
 
@@ -376,7 +376,9 @@ export default function Home() {
                       <Image
                         src={`https://www.google.com/s2/favicons?domain=${url}&sz=64`}
                         alt=""
-                        className="w-4 h-4 rounded-sm object-contain opacity-90"
+                        width={16}
+                        height={16}
+                        className="rounded-sm object-contain"
                       />
                       <span>{url}</span>
                     </button>
@@ -414,6 +416,8 @@ export default function Home() {
                   <Image
                     src={`https://www.google.com/s2/favicons?domain=${url}&sz=64`}
                     alt=""
+                    width={16}
+                    height={16}
                     className="w-4 h-4 rounded-sm object-contain"
                   />
                   <h2 className="text-sm font-bold text-black tracking-tight">
@@ -452,8 +456,10 @@ export default function Home() {
                         <Image
                           src={optimizedImage(shot.cloudinary_url, 600)}
                           alt=""
+                          fill
+                          sizes="(max-width: 768px) 70vw, 300px"
                           draggable={false}
-                          className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+                          className="object-contain"
                           loading="lazy"
                         />
                       ) : (
@@ -526,11 +532,16 @@ export default function Home() {
             {/* 2. Image Container (Flex Grow + Min-Height 0) */}
             <div className="flex-1 w-full min-h-0 p-4 flex items-center justify-center relative">
               {selectedShot.cloudinary_url && (
-                <Image
-                  src={optimizedImage(selectedShot.cloudinary_url, 1600)}
-                  alt={selectedShot.url}
-                  className="max-w-full max-h-full object-contain shadow-2xl rounded z-10"
-                />
+                <div className="relative w-full h-full">
+                  <Image
+                    src={optimizedImage(selectedShot.cloudinary_url, 1600)}
+                    alt={selectedShot.url}
+                    fill
+                    sizes="100vw"
+                    priority
+                    className="object-contain shadow-2xl rounded"
+                  />
+                </div>
               )}
             </div>
 
@@ -540,6 +551,8 @@ export default function Home() {
                 <Image
                   src={`https://www.google.com/s2/favicons?domain=${selectedShot.url}&sz=64`}
                   alt=""
+                  width={16}
+                  height={16}
                   className="w-4 h-4 rounded-sm object-contain opacity-80"
                 />
                 <h3 className="text-sm font-bold tracking-widest uppercase">
