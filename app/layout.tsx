@@ -1,21 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Topbar } from "@/components/top-bar";
 import Providers from "./providers";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Kiosk24",
-  description: "Image snapshot of news websites 24/7",
+  description: "Screenshot of news website every hour",
 };
 
 export default function RootLayout({
@@ -25,10 +15,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Providers>{children}</Providers>
+      <body className="antialiased min-h-svh bg-background text-foreground">
+        <Providers>
+          <Topbar />
+          <main className="px-4 py-8">{children}</main>
+        </Providers>
       </body>
     </html>
   );

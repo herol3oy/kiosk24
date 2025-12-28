@@ -1,19 +1,22 @@
-import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
-import { getQueryClient } from "@/app/get-query-client";
-import { KioskClient } from "./KioskClient";
-import { activeDatesOptions, screenshotsOptions } from "./queries";
+import { createClient } from "@/lib/supabase/server";
+import HomeClient from "./home-client";
+
+type UrlWithLanguage = { url: string; language: string };
 
 export default async function Home() {
-  const queryClient = getQueryClient();
+  const supabase = await createClient();
 
-  await queryClient.prefetchQuery(activeDatesOptions);
-
-  const today = new Date();
-  await queryClient.prefetchQuery(screenshotsOptions(today, "desktop"));
+  const [urlsResult, daysResult] = await Promise.all([
+    supabase.rpc("get_unique_urls_with_lang"),
+    supabase.rpc("get_screenshot_days"),
+  ]);
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <KioskClient />
-    </HydrationBoundary>
+    <HomeClient
+      initialUrlsWithLang={(urlsResult.data ?? []) as UrlWithLanguage[]}
+      initialDayStrings={(daysResult.data ?? []) as string[]}
+      urlsError={urlsResult.error?.message}
+      daysError={daysResult.error?.message}
+    />
   );
 }
