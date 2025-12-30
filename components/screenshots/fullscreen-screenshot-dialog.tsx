@@ -97,7 +97,7 @@ export function FullscreenScreenshotDialog({
               <ChevronRight className="h-6 w-6" />
             </button>
 
-            {active?.job_status === "failed" || !active?.cloudinary_url ? (
+            {active?.job_status === "failed" || !active?.storage_url ? (
               <div className="grid place-items-center text-center">
                 <Images className="h-12 w-12 text-white/30" />
                 <p className="mt-3 text-base text-white/70">
@@ -106,7 +106,7 @@ export function FullscreenScreenshotDialog({
               </div>
             ) : (
               <Image
-                src={active.cloudinary_url}
+                src={active.storage_url}
                 alt={`Screenshot of ${url}`}
                 fill
                 className="object-contain"

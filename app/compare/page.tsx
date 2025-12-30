@@ -85,8 +85,8 @@ export default function ComparePage() {
 
   const isMobileMode = device === "mobile";
 
-  const shot1Url = shot1?.cloudinary_url || null;
-  const shot2Url = shot2?.cloudinary_url || null;
+  const shot1Url = shot1?.storage_url || null;
+  const shot2Url = shot2?.storage_url || null;
 
   const hasFailure =
     shot1?.job_status === "failed" || shot2?.job_status === "failed";
