@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 import { Topbar } from "@/components/top-bar";
 import Providers from "./providers";
 
@@ -18,7 +19,10 @@ export default function RootLayout({
       <body className="antialiased min-h-svh bg-background text-foreground">
         <Providers>
           <Topbar />
-          <main className="px-4 py-8">{children}</main>
+          <main className="px-4 py-8">
+            {children}
+            <Analytics />
+          </main>
         </Providers>
       </body>
     </html>
