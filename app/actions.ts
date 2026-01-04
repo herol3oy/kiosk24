@@ -121,3 +121,13 @@ export async function getScreenshotsForUrl(url: string) {
   if (error) throw error;
   return (data ?? []) as Screenshot[];
 }
+
+export async function getLatestScreenshotsPerUrlAndDevice() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc(
+    "latest_screenshots_per_url_and_device",
+  );
+
+  if (error) throw error;
+  return (data ?? []) as Screenshot[];
+}

@@ -1,5 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import {
+  getLatestScreenshotsPerUrlAndDevice,
   getScreenshotDays,
   getScreenshotsForDateDeviceUrls,
   getScreenshotsForUrl,
@@ -81,3 +82,10 @@ export const screenshotsForUrlQuery = (url: string) =>
     },
     enabled: !!url,
   });
+
+export const latestScreenshotsPerUrlAndDeviceQuery = queryOptions({
+  queryKey: ["latest_screenshots_per_url_and_device"] as const,
+  queryFn: async () => {
+    return await getLatestScreenshotsPerUrlAndDevice();
+  },
+});
