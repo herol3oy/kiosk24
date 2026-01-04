@@ -5,7 +5,6 @@ import { format, parseISO } from "date-fns";
 import { Images } from "lucide-react";
 import { useMemo, useState } from "react";
 import { screenshotsForUrlAndDateQuery } from "@/app/db/queries";
-import { DeviceTypeCard } from "@/components/device-type-card";
 import { LanguageMultiSelectCard } from "@/components/language-multi-select-card";
 import { ScreenshotDayPicker } from "@/components/screenshot-day-picker";
 import { UrlScreenshotStrip } from "@/components/screenshots/url-screenshot-strip";
@@ -30,7 +29,7 @@ export default function HomeClient({
   urlsError?: string;
   daysError?: string;
 }) {
-  const { date, setDate, device, setDevice } = useDateAndDevice();
+  const { date, setDate, device } = useDateAndDevice();
 
   const [selectedUrls, setSelectedUrls] = useState<string[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
@@ -108,8 +107,6 @@ export default function HomeClient({
           onSelect={handleDateSelect}
           availableDays={availableDays}
         />
-
-        <DeviceTypeCard device={device} onDeviceChange={setDevice} />
 
         <UrlMultiSelectCard
           urls={filteredUrls}

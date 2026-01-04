@@ -9,7 +9,6 @@ import {
   ReactCompareSliderImage,
 } from "react-compare-slider";
 import { ScreenshotPickerCard } from "@/components/compare/screenshot-picker-card";
-import { DeviceTypeCard } from "@/components/device-type-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   applyDateChange,
@@ -27,7 +26,7 @@ import {
 import "react-day-picker/style.css";
 
 export default function ComparePage() {
-  const { device, setDevice } = useDateAndDevice();
+  const { device } = useDateAndDevice();
 
   const [left, setLeft] = useState<CompareSelection>(emptySelection);
   const [right, setRight] = useState<CompareSelection>(emptySelection);
@@ -112,11 +111,7 @@ export default function ComparePage() {
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[320px_1fr]">
-      <aside className="space-y-4">
-        <DeviceTypeCard device={device} onDeviceChange={setDevice} />
-      </aside>
-
-      <section className="space-y-6" aria-label="Compare screenshots">
+      <aside className="space-y-6" aria-label="Compare selection">
         {daysQuery.isLoading ? (
           <p className="text-sm text-muted-foreground">
             Loading available days…
@@ -127,7 +122,7 @@ export default function ComparePage() {
           </p>
         ) : null}
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="space-y-4">
           <div className="space-y-2">
             <ScreenshotPickerCard
               title="First Screenshot"
@@ -174,6 +169,9 @@ export default function ComparePage() {
             ) : null}
           </div>
         </div>
+      </aside>
+
+      <section className="min-w-0" aria-label="Comparison result">
         {(() => {
           switch (view) {
             case "error":

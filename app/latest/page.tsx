@@ -2,7 +2,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
-import { DeviceTypeCard } from "@/components/device-type-card";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDateTimeShort24, formatTime24 } from "@/lib/datetime/format";
 import { useDateAndDevice } from "@/lib/hooks/use-date-and-device";
@@ -10,7 +9,7 @@ import type { Screenshot } from "@/lib/types/screenshot";
 import { latestScreenshotsPerUrlAndDeviceQuery } from "../db/queries";
 
 export default function LatestPage() {
-  const { device, setDevice } = useDateAndDevice();
+  const { device } = useDateAndDevice();
 
   const latestScreenshotsQuery = useQuery(
     latestScreenshotsPerUrlAndDeviceQuery,
@@ -23,16 +22,8 @@ export default function LatestPage() {
   const isDesktop = device === "desktop";
 
   return (
-    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[320px_1fr]">
-      <aside className="space-y-4">
-        <DeviceTypeCard
-          device={device}
-          onDeviceChange={setDevice}
-          name="latest-device"
-        />
-      </aside>
-
-      <section className="min-w-0" aria-label="Latest screenshots">
+    <div className="min-w-0">
+      <section className="" aria-label="Latest screenshots">
         <Card className="border-muted bg-card/50 backdrop-blur-sm">
           <CardContent className="p-0">
             <div className="relative h-[70vh] bg-muted/20">
