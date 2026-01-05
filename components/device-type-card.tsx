@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 export function DeviceTypeCard({
   device,
   onDeviceChange,
-  name = "device",
   variant = "default",
   className,
   contentClassName,
@@ -39,8 +38,6 @@ export function DeviceTypeCard({
         <DeviceTypeSelector
           device={device}
           onDeviceChange={onDeviceChange}
-          name={name}
-          variant={variant}
         />
       </CardContent>
     </Card>
