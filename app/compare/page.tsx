@@ -23,7 +23,6 @@ import {
   screenshotDaysQuery,
   screenshotsForUrlAndDateQuery,
 } from "../db/queries";
-import "react-day-picker/style.css";
 
 export default function ComparePage() {
   const { device } = useDateAndDevice();

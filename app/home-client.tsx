@@ -16,7 +16,6 @@ import {
   useUrlLanguageFilter,
 } from "@/lib/hooks/use-url-language-filter";
 import { groupScreenshotsByUrl } from "@/lib/screenshots/group";
-import "react-day-picker/style.css";
 
 export default function HomeClient({
   initialUrlsWithLang,
