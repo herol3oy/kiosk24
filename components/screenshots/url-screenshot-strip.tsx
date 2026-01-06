@@ -127,7 +127,7 @@ export function UrlScreenshotStrip({
                           </p>
                         </div>
                       </figure>
-                    ) : screenshot.storage_url ? (
+                    ) : screenshot.screenshot_url ? (
                       <figure className="w-80 space-y-2">
                         <figcaption className="pl-1 text-xs text-muted-foreground">
                           {formatTime24(screenshot.captured_at)}
@@ -145,7 +145,7 @@ export function UrlScreenshotStrip({
                             }`}
                           >
                             <Image
-                              src={screenshot.storage_url}
+                              src={screenshot.screenshot_url}
                               alt={`Screenshot of ${screenshot.url}`}
                               width={800}
                               height={450}

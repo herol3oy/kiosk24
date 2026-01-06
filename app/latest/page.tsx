@@ -49,7 +49,7 @@ export default function LatestPage() {
                       }`}
                     >
                       <Image
-                        src={screenshot.storage_url ?? ""}
+                        src={screenshot.screenshot_url ?? ""}
                         alt={`${device} screenshot ${screenshot.id}`}
                         fill
                         className="object-cover"
