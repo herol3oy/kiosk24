@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "kiosk24.fyi",
-        pathname: "/kiosk24/**",
+        hostname: "cdn.kiosk24.fyi",
+        pathname: "/**",
       },
       {
         protocol: "https",
