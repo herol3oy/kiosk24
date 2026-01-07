@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
+import { withCdnCgiImage } from "@/lib/cdn-cgi-image";
 import { formatDateTimeShort24, formatTime24 } from "@/lib/datetime/format";
 import { useDateAndDevice } from "@/lib/hooks/use-date-and-device";
 import type { Screenshot } from "@/lib/types/screenshot";
@@ -49,7 +50,15 @@ export default function LatestPage() {
                       }`}
                     >
                       <Image
-                        src={screenshot.screenshot_url ?? ""}
+                        src={
+                          screenshot.screenshot_url
+                            ? withCdnCgiImage(screenshot.screenshot_url, {
+                                width: 1200,
+                                quality: 75,
+                                format: "auto",
+                              })
+                            : ""
+                        }
                         alt={`${device} screenshot ${screenshot.id}`}
                         fill
                         className="object-cover"
@@ -59,6 +68,9 @@ export default function LatestPage() {
                             : "(max-width: 768px) 33vw, 25vw"
                         }
                         priority={index < 2}
+                        unoptimized
+                        placeholder="blur"
+                        blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mN89x8AAuEB74Y0o2cAAAAASUVORK5CYII="
                       />
 
                       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-background/90 to-transparent" />

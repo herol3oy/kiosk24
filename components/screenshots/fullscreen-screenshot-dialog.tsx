@@ -13,6 +13,7 @@ import Image from "next/image";
 import * as React from "react";
 import { SiteFavicon } from "@/components/site-favicon";
 import { DialogHeader } from "@/components/ui/dialog";
+import { withCdnCgiImage } from "@/lib/cdn-cgi-image";
 import { formatDateTimeShort24 } from "@/lib/datetime/format";
 import type { Screenshot } from "@/lib/types/screenshot";
 
@@ -106,12 +107,15 @@ export function FullscreenScreenshotDialog({
               </div>
             ) : (
               <Image
-                src={active.screenshot_url}
+                src={withCdnCgiImage(active.screenshot_url, {
+                  width: 1920,
+                  quality: 75,
+                  format: "auto",
+                })}
                 alt={`Screenshot of ${url}`}
                 fill
                 className="object-contain"
-                priority
-                quality={100}
+                unoptimized
                 placeholder="blur"
                 blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mN89x8AAuEB74Y0o2cAAAAASUVORK5CYII="
               />

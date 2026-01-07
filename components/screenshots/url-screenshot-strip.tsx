@@ -8,6 +8,7 @@ import { FullscreenScreenshotDialog } from "@/components/screenshots/fullscreen-
 import { SiteFavicon } from "@/components/site-favicon";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { withCdnCgiImage } from "@/lib/cdn-cgi-image";
 import { formatTime24 } from "@/lib/datetime/format";
 import type { Device } from "@/lib/hooks/use-date-and-device";
 import type { Screenshot } from "@/lib/types/screenshot";
@@ -145,7 +146,11 @@ export function UrlScreenshotStrip({
                             }`}
                           >
                             <Image
-                              src={screenshot.screenshot_url}
+                              src={withCdnCgiImage(screenshot.screenshot_url, {
+                                width: 800,
+                                quality: 75,
+                                format: "auto",
+                              })}
                               alt={`Screenshot of ${screenshot.url}`}
                               width={800}
                               height={450}
@@ -154,6 +159,7 @@ export function UrlScreenshotStrip({
                                   ? "h-full w-full object-contain transition-transform duration-200 group-hover:scale-105"
                                   : "h-auto w-full transition-transform duration-200 group-hover:scale-105"
                               }
+                              unoptimized
                               placeholder="blur"
                               blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mN89x8AAuEB74Y0o2cAAAAASUVORK5CYII="
                             />

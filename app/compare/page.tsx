@@ -10,6 +10,7 @@ import {
 } from "react-compare-slider";
 import { ScreenshotPickerCard } from "@/components/compare/screenshot-picker-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { withCdnCgiImage } from "@/lib/cdn-cgi-image";
 import {
   applyDateChange,
   applyShotChange,
@@ -83,8 +84,20 @@ export default function ComparePage() {
 
   const isMobileMode = device === "mobile";
 
-  const shot1Url = shot1?.screenshot_url || null;
-  const shot2Url = shot2?.screenshot_url || null;
+  const shot1Url = shot1?.screenshot_url
+    ? withCdnCgiImage(shot1.screenshot_url, {
+        width: 1600,
+        quality: 75,
+        format: "auto",
+      })
+    : null;
+  const shot2Url = shot2?.screenshot_url
+    ? withCdnCgiImage(shot2.screenshot_url, {
+        width: 1600,
+        quality: 75,
+        format: "auto",
+      })
+    : null;
 
   const hasFailure =
     shot1?.job_status === "failed" || shot2?.job_status === "failed";
@@ -259,6 +272,9 @@ export default function ComparePage() {
                           sizes="100vw"
                           className="object-contain"
                           priority
+                          unoptimized
+                          placeholder="blur"
+                          blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mN89x8AAuEB74Y0o2cAAAAASUVORK5CYII="
                         />
                       </div>
                     </div>
