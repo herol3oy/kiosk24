@@ -1,7 +1,11 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { Images } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import { FullscreenScreenshotDialog } from "@/components/screenshots/fullscreen-screenshot-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { withCdnCgiImage } from "@/lib/cdn-cgi-image";
 import { formatDateTimeShort24, formatTime24 } from "@/lib/datetime/format";
@@ -24,7 +28,16 @@ export default function LatestPage() {
 
   return (
     <div className="min-w-0">
-      <section className="" aria-label="Latest screenshots">
+      <header className="mb-4 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-lg font-semibold">Latest screenshots</h1>
+          <p className="text-sm text-muted-foreground">
+            Click a screenshot to open it full-screen.
+          </p>
+        </div>
+      </header>
+
+      <section aria-label="Latest screenshots">
         <Card className="border-muted bg-card/50 backdrop-blur-sm">
           <CardContent className="p-0">
             <div className="relative h-[70vh] bg-muted/20">
@@ -45,52 +58,74 @@ export default function LatestPage() {
                   {filtered.map((screenshot, index) => (
                     <div
                       key={screenshot.id}
-                      className={`relative overflow-hidden rounded-2xl border border-muted bg-muted/10 shadow-sm ${
-                        isDesktop ? "aspect-video" : "aspect-9/16"
-                      }`}
+                      className="overflow-hidden rounded-2xl border border-muted bg-muted/10 shadow-sm"
                     >
-                      <Image
-                        src={
-                          screenshot.screenshot_url
-                            ? withCdnCgiImage(screenshot.screenshot_url, {
+                      {screenshot.job_status === "failed" ||
+                      !screenshot.screenshot_url ? (
+                        <div
+                          className={`grid place-items-center text-center ${
+                            isDesktop ? "aspect-video" : "aspect-9/16"
+                          }`}
+                        >
+                          <Images className="h-10 w-10 text-muted-foreground/40" />
+                          <p className="mt-2 px-4 text-sm text-muted-foreground">
+                            Screenshot is not available
+                          </p>
+                        </div>
+                      ) : (
+                        <FullscreenScreenshotDialog
+                          url={screenshot.url}
+                          screenshots={[screenshot]}
+                          initialIndex={0}
+                        >
+                          <button
+                            type="button"
+                            className={`group relative block w-full cursor-zoom-in overflow-hidden ${
+                              isDesktop ? "aspect-video" : "aspect-9/16"
+                            }`}
+                            aria-label={`Open screenshot for ${screenshot.url}`}
+                          >
+                            <Image
+                              src={withCdnCgiImage(screenshot.screenshot_url, {
                                 width: 1200,
                                 quality: 75,
                                 format: "auto",
-                              })
-                            : ""
-                        }
-                        alt={`${device} screenshot ${screenshot.id}`}
-                        fill
-                        className="object-cover"
-                        sizes={
-                          isDesktop
-                            ? "(max-width: 1280px) 50vw, 33vw"
-                            : "(max-width: 768px) 33vw, 25vw"
-                        }
-                        priority={index < 2}
-                        unoptimized
-                        placeholder="blur"
-                        blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mN89x8AAuEB74Y0o2cAAAAASUVORK5CYII="
-                      />
+                              })}
+                              alt={`${device} screenshot ${screenshot.id}`}
+                              fill
+                              className="object-cover transition-transform duration-200 group-hover:scale-[1.02]"
+                              sizes={
+                                isDesktop
+                                  ? "(max-width: 1280px) 50vw, 33vw"
+                                  : "(max-width: 768px) 33vw, 25vw"
+                              }
+                              priority={index < 2}
+                              unoptimized
+                              placeholder="blur"
+                              blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mN89x8AAuEB74Y0o2cAAAAASUVORK5CYII="
+                            />
+                          </button>
+                        </FullscreenScreenshotDialog>
+                      )}
 
-                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-background/90 to-transparent" />
-                      <div className="absolute inset-x-0 bottom-0 p-3">
-                        <div className="min-w-0">
-                          <p
-                            className="truncate text-xs font-medium"
-                            title={screenshot.url}
-                          >
-                            {screenshot.url}
-                          </p>
-                          <p
-                            className="text-xs text-muted-foreground"
-                            title={formatDateTimeShort24(
-                              screenshot.captured_at,
-                            )}
-                          >
-                            {formatTime24(screenshot.captured_at)}
-                          </p>
-                        </div>
+                      <div className="flex items-start justify-between gap-2 border-t border-muted/60 p-3">
+                        <Link
+                          href={screenshot.url}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          className="min-w-0 truncate text-xs font-medium hover:underline"
+                          title={screenshot.url}
+                        >
+                          {screenshot.url}
+                        </Link>
+
+                        <Badge
+                          variant="secondary"
+                          className="shrink-0"
+                          title={formatDateTimeShort24(screenshot.captured_at)}
+                        >
+                          {formatTime24(screenshot.captured_at)}
+                        </Badge>
                       </div>
                     </div>
                   ))}
