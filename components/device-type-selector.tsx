@@ -22,11 +22,7 @@ export function DeviceTypeSelector({
         if (value) onDeviceChange(value as Device);
       }}
     >
-      <ToggleGroupItem
-        value="desktop"
-        aria-label="Desktop"
-        className="flex-1"
-      >
+      <ToggleGroupItem value="desktop" aria-label="Desktop" className="flex-1">
         <Monitor className="size-4" />
       </ToggleGroupItem>
 

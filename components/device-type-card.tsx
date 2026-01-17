@@ -35,10 +35,7 @@ export function DeviceTypeCard({
           contentClassName,
         )}
       >
-        <DeviceTypeSelector
-          device={device}
-          onDeviceChange={onDeviceChange}
-        />
+        <DeviceTypeSelector device={device} onDeviceChange={onDeviceChange} />
       </CardContent>
     </Card>
   );

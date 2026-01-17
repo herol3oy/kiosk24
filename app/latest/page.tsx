@@ -1,10 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Images } from "lucide-react";
+import { Clock, ExternalLink, Images } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { FullscreenScreenshotDialog } from "@/components/screenshots/fullscreen-screenshot-dialog";
+import { SiteFavicon } from "@/components/site-favicon";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { withCdnCgiImage } from "@/lib/cdn-cgi-image";
@@ -15,6 +17,21 @@ import { latestScreenshotsPerUrlAndDeviceQuery } from "../db/queries";
 
 export default function LatestPage() {
   const { device } = useDateAndDevice();
+
+  const [today, setToday] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setToday(new Date());
+  }, []);
+
+  const todayLabel = today
+    ? new Intl.DateTimeFormat(undefined, {
+        weekday: "short",
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+      }).format(today)
+    : "";
 
   const latestScreenshotsQuery = useQuery(
     latestScreenshotsPerUrlAndDeviceQuery,
@@ -34,6 +51,15 @@ export default function LatestPage() {
           <p className="text-sm text-muted-foreground">
             Click a screenshot to open it full-screen.
           </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="shrink-0">
+            {todayLabel ? `Today: ${todayLabel}` : "Today"}
+          </Badge>
+          <Badge variant="secondary" className="shrink-0 tabular-nums">
+            {filtered.length} total
+          </Badge>
         </div>
       </header>
 
@@ -109,21 +135,35 @@ export default function LatestPage() {
                       )}
 
                       <div className="flex items-start justify-between gap-2 border-t border-muted/60 p-3">
-                        <Link
-                          href={screenshot.url}
-                          target="_blank"
-                          rel="noreferrer noopener"
-                          className="min-w-0 truncate text-xs font-medium hover:underline"
-                          title={screenshot.url}
+                        <Badge
+                          asChild
+                          variant="outline"
+                          className="min-w-0 bg-muted/20 hover:bg-muted/35"
                         >
-                          {screenshot.url}
-                        </Link>
+                          <Link
+                            href={`https://${screenshot.url}`}
+                            target="_blank"
+                            rel="noreferrer noopener"
+                            className="flex min-w-0 max-w-full items-center gap-1 truncate px-2.5 py-1 text-[11px] font-semibold"
+                            title={screenshot.url}
+                          >
+                            <SiteFavicon
+                              url={screenshot.url}
+                              size={14}
+                              className="shrink-0 rounded-sm"
+                              hideOnError
+                            />
+                            <span className="truncate">{screenshot.url}</span>
+                            <ExternalLink className="h-3 w-3 shrink-0 opacity-70" />
+                          </Link>
+                        </Badge>
 
                         <Badge
                           variant="secondary"
-                          className="shrink-0"
+                          className="shrink-0 px-2.5 py-1 text-[11px] font-semibold tabular-nums"
                           title={formatDateTimeShort24(screenshot.captured_at)}
                         >
+                          <Clock className="h-3 w-3 opacity-70" />
                           {formatTime24(screenshot.captured_at)}
                         </Badge>
                       </div>
