@@ -31,23 +31,25 @@ export function UrlScreenshotStrip({
   const [canScrollPrev, setCanScrollPrev] = React.useState(false);
   const [canScrollNext, setCanScrollNext] = React.useState(false);
 
-  const updateNavState = React.useCallback(() => {
-    if (!emblaApi) return;
-    setCanScrollPrev(emblaApi.canScrollPrev());
-    setCanScrollNext(emblaApi.canScrollNext());
-  }, [emblaApi]);
-
   React.useEffect(() => {
     if (!emblaApi) return;
+
+    const api = emblaApi;
+
+    function updateNavState() {
+      setCanScrollPrev(api.canScrollPrev());
+      setCanScrollNext(api.canScrollNext());
+    }
+
     updateNavState();
-    emblaApi.on("select", updateNavState);
-    emblaApi.on("reInit", updateNavState);
+    api.on("select", updateNavState);
+    api.on("reInit", updateNavState);
 
     return () => {
-      emblaApi.off("select", updateNavState);
-      emblaApi.off("reInit", updateNavState);
+      api.off("select", updateNavState);
+      api.off("reInit", updateNavState);
     };
-  }, [emblaApi, updateNavState]);
+  }, [emblaApi]);
 
   React.useEffect(() => {
     if (!emblaApi) return;
@@ -59,8 +61,9 @@ export function UrlScreenshotStrip({
     }
 
     emblaApi.reInit();
-    updateNavState();
-  }, [emblaApi, screenshots.length, updateNavState]);
+    setCanScrollPrev(emblaApi.canScrollPrev());
+    setCanScrollNext(emblaApi.canScrollNext());
+  }, [emblaApi, screenshots.length]);
 
   const okCount = screenshots.filter((s) => s.job_status === "ok").length;
   const failedCount = screenshots.length - okCount;

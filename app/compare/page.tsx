@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Maximize2 } from "lucide-react";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   ReactCompareSlider,
   ReactCompareSliderImage,
@@ -73,14 +73,8 @@ export default function ComparePage() {
   const shots1: Screenshot[] = shots1Query.data ?? [];
   const shots2: Screenshot[] = shots2Query.data ?? [];
 
-  const shot1 = useMemo(
-    () => shots1.find((s) => s.id === left.shotId),
-    [shots1, left.shotId],
-  );
-  const shot2 = useMemo(
-    () => shots2.find((s) => s.id === right.shotId),
-    [shots2, right.shotId],
-  );
+  const shot1 = shots1.find((s) => s.id === left.shotId);
+  const shot2 = shots2.find((s) => s.id === right.shotId);
 
   const isMobileMode = device === "mobile";
 

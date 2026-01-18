@@ -3,7 +3,7 @@
 import { useQueries } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { Images } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { screenshotsForUrlAndDateQuery } from "@/app/db/queries";
 import { LanguageMultiSelectCard } from "@/components/language-multi-select-card";
 import { ScreenshotDayPicker } from "@/components/screenshot-day-picker";
@@ -35,19 +35,15 @@ export default function HomeClient({
 
   const parsedDate = date ? parseISO(date) : undefined;
 
-  const availableDays = useMemo(
-    () => initialDayStrings.map((d) => new Date(`${d}T00:00:00`)),
-    [initialDayStrings],
-  );
+  const availableDays = initialDayStrings.map((d) => new Date(`${d}T00:00:00`));
 
   const { languages, filteredUrls, filteredUrlsSet } = useUrlLanguageFilter({
     urlsWithLang: initialUrlsWithLang,
     selectedLanguages,
   });
 
-  const activeSelectedUrls = useMemo(
-    () => selectedUrls.filter((url) => filteredUrlsSet.has(url)),
-    [selectedUrls, filteredUrlsSet],
+  const activeSelectedUrls = selectedUrls.filter((url) =>
+    filteredUrlsSet.has(url),
   );
 
   const screenshotQueries = useQueries({

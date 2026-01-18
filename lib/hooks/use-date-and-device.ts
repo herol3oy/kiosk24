@@ -5,7 +5,6 @@ import {
   type ReactNode,
   type SetStateAction,
   useContext,
-  useMemo,
   useState,
 } from "react";
 
@@ -28,10 +27,7 @@ export function DateAndDeviceProvider({ children }: { children: ReactNode }) {
   );
   const [device, setDevice] = useState<Device>("desktop");
 
-  const value = useMemo(
-    () => ({ date, setDate, device, setDevice }),
-    [date, device],
-  );
+  const value: DateAndDeviceContextValue = { date, setDate, device, setDevice };
 
   return createElement(DateAndDeviceContext.Provider, { value }, children);
 }

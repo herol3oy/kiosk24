@@ -1,7 +1,7 @@
 "use client";
 
 import { Images, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { SiteFavicon } from "@/components/site-favicon";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,11 +21,10 @@ export function UrlMultiSelectCard({
 }) {
   const [urlSearch, setUrlSearch] = useState("");
 
-  const filteredUrls = useMemo(() => {
-    const normalizedSearch = urlSearch.trim().toLowerCase();
-    if (!normalizedSearch) return urls;
-    return urls.filter((url) => url.toLowerCase().includes(normalizedSearch));
-  }, [urls, urlSearch]);
+  const normalizedSearch = urlSearch.trim().toLowerCase();
+  const filteredUrls = normalizedSearch
+    ? urls.filter((url) => url.toLowerCase().includes(normalizedSearch))
+    : urls;
 
   return (
     <Card className="border-muted bg-card/50 backdrop-blur-sm">
