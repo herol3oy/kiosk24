@@ -3,7 +3,7 @@
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, Images } from "lucide-react";
 import Image from "next/image";
-import * as React from "react";
+import { useEffect, useState } from "react";
 import { FullscreenScreenshotDialog } from "@/components/screenshots/fullscreen-screenshot-dialog";
 import { SiteFavicon } from "@/components/site-favicon";
 import { Button } from "@/components/ui/button";
@@ -28,10 +28,10 @@ export function UrlScreenshotStrip({
     align: "start",
     containScroll: "trimSnaps",
   });
-  const [canScrollPrev, setCanScrollPrev] = React.useState(false);
-  const [canScrollNext, setCanScrollNext] = React.useState(false);
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!emblaApi) return;
 
     const api = emblaApi;
@@ -51,7 +51,7 @@ export function UrlScreenshotStrip({
     };
   }, [emblaApi]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!emblaApi) return;
 
     if (screenshots.length <= 1) {
