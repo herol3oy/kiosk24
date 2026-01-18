@@ -8,9 +8,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@radix-ui/react-dialog";
-import { ChevronLeft, ChevronRight, Images, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Images, Loader2, X } from "lucide-react";
 import Image from "next/image";
-import * as React from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { SiteFavicon } from "@/components/site-favicon";
 import { DialogHeader } from "@/components/ui/dialog";
 import { withCdnCgiImage } from "@/lib/cdn-cgi-image";
@@ -26,29 +26,53 @@ export function FullscreenScreenshotDialog({
   url: string;
   screenshots: Screenshot[];
   initialIndex: number;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
-  const [open, setOpen] = React.useState(false);
-  const [activeIndex, setActiveIndex] = React.useState(initialIndex);
+  const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(initialIndex);
+  const [isLoading, setIsLoading] = useState(false);
+  const loadingSrcRef = useRef<string | null>(null);
 
   const active = screenshots[activeIndex];
   const canPrev = activeIndex > 0;
   const canNext = activeIndex < screenshots.length - 1;
 
-  const goPrev = React.useCallback(() => {
-    setActiveIndex((i) => Math.max(0, i - 1));
-  }, []);
+  const activeImageSrc =
+    active?.job_status !== "failed" && active?.screenshot_url
+      ? withCdnCgiImage(active.screenshot_url, {
+          width: 1920,
+          quality: 75,
+          format: "auto",
+        })
+      : null;
 
-  const goNext = React.useCallback(() => {
+  function goPrev() {
+    setIsLoading(true);
+    setActiveIndex((i) => Math.max(0, i - 1));
+  }
+
+  function goNext() {
+    setIsLoading(true);
     setActiveIndex((i) => Math.min(screenshots.length - 1, i + 1));
-  }, [screenshots.length]);
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    loadingSrcRef.current = activeImageSrc;
+    setIsLoading(Boolean(activeImageSrc));
+  }, [activeImageSrc, open]);
 
   return (
     <Dialog
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
-        if (next) setActiveIndex(initialIndex);
+        if (next) {
+          setActiveIndex(initialIndex);
+          setIsLoading(true);
+        } else {
+          setIsLoading(false);
+        }
       }}
     >
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -106,19 +130,43 @@ export function FullscreenScreenshotDialog({
                 </p>
               </div>
             ) : (
-              <Image
-                src={withCdnCgiImage(active.screenshot_url, {
-                  width: 1920,
-                  quality: 75,
-                  format: "auto",
-                })}
-                alt={`Screenshot of ${url}`}
-                fill
-                className="object-contain"
-                unoptimized
-                placeholder="blur"
-                blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mN89x8AAuEB74Y0o2cAAAAASUVORK5CYII="
-              />
+              <>
+                {isLoading ? (
+                  <div className="absolute inset-0 z-40 grid place-items-center">
+                    <div className="flex items-center gap-2 rounded-full bg-black/40 px-4 py-2 text-white/80 backdrop-blur-sm">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span className="text-sm">Loading…</span>
+                    </div>
+                  </div>
+                ) : null}
+
+                {activeImageSrc ? (
+                  <Image
+                    key={activeImageSrc ?? activeIndex}
+                    src={activeImageSrc}
+                    alt={`Screenshot of ${url}`}
+                    fill
+                    className={
+                      "object-contain transition-opacity duration-150 " +
+                      (isLoading ? "opacity-0" : "opacity-100")
+                    }
+                    unoptimized
+                    placeholder="blur"
+                    blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mN89x8AAuEB74Y0o2cAAAAASUVORK5CYII="
+                    onLoadingComplete={(img) => {
+                      const expected = loadingSrcRef.current;
+                      if (!expected) {
+                        setIsLoading(false);
+                        return;
+                      }
+                      if (img.currentSrc === expected) setIsLoading(false);
+                    }}
+                    onError={() => {
+                      setIsLoading(false);
+                    }}
+                  />
+                ) : null}
+              </>
             )}
           </div>
         </DialogContent>
