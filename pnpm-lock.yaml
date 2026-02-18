@@ -60,6 +60,9 @@ importers:
       '@tailwindcss/vite':
         specifier: ^4.1.18
         version: 4.1.18(vite@6.4.1(@types/node@25.2.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0))
+      '@tanstack/preact-query':
+        specifier: ^5.91.0
+        version: 5.91.0(preact@10.28.3)
       astro:
         specifier: ^5.17.1
         version: 5.17.1(@types/node@25.2.1)(jiti@2.6.1)(lightningcss@1.30.2)(rollup@4.57.1)(tsx@4.21.0)(typescript@5.9.3)
@@ -1521,6 +1524,14 @@ packages:
     resolution: {integrity: sha512-jVA+/UpKL1vRLg6Hkao5jldawNmRo7mQYrZtNHMIVpLfLhDml5nMRUo/8MwoX2vNXvnaXNNMedrMfMugAVX1nA==}
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7
+
+  '@tanstack/preact-query@5.91.0':
+    resolution: {integrity: sha512-42n8IT5dSBYwdl/yUzlK4vtPwrufffX+Xx2TvnfJNo8xsIEl+mzRkKDOkIdpTZktBJZT9Qz5SLIv1dDoMQqcig==}
+    peerDependencies:
+      preact: ^10.0.0
+
+  '@tanstack/query-core@5.90.20':
+    resolution: {integrity: sha512-OMD2HLpNouXEfZJWcKeVKUgQ5n+n3A2JFmBaScpNDUqSrQSjiveC7dKMe53uJUg1nDG16ttFPz2xfilz6i2uVg==}
 
   '@types/debug@4.1.12':
     resolution: {integrity: sha512-vIChWdVG3LG1SMxEvI/AK+FWJthlrqlTu7fbrlywTkkaONwk/UAGaULXRlf8vkzFBLVm0zkMdCquhL5aOjhXPQ==}
@@ -4184,6 +4195,13 @@ snapshots:
       '@tailwindcss/oxide': 4.1.18
       tailwindcss: 4.1.18
       vite: 6.4.1(@types/node@25.2.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)
+
+  '@tanstack/preact-query@5.91.0(preact@10.28.3)':
+    dependencies:
+      '@tanstack/query-core': 5.90.20
+      preact: 10.28.3
+
+  '@tanstack/query-core@5.90.20': {}
 
   '@types/debug@4.1.12':
     dependencies:
