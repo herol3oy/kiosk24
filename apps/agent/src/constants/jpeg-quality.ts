@@ -1,0 +1,1 @@
+export const JPEG_QUALITY = 60;

@@ -2,7 +2,7 @@ import { BrowserContext, Page } from 'playwright';
 import { UrlEntry } from '../../../../libs/shared/src/types';
 import { getJsCleanup } from '../utils/getJsCleanup';
 import { getUrlKey } from '../utils/getUrlKey';
-import { JPEG_QUALITY } from '../config/constants';
+import { JPEG_QUALITY } from '../constants/jpeg-quality';
 import { uploadScreenshot } from '../services/uploadScreenshot';
 
 export async function processSingleUrl(

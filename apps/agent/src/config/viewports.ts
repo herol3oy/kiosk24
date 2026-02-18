@@ -1,16 +1,4 @@
-export const JPEG_QUALITY = 60;
-
-export const BROWSER_ARGS = [
-    "--headless",
-    "--no-sandbox",
-    "--disable-dev-shm-usage",
-    "--disable-gpu",
-    "--hide-scrollbars",
-    "--disable-notifications",
-    "--disable-setuid-sandbox",
-    "--mute-audio",
-    "--disable-extensions"
-];
+import { DeviceConfig } from "../types/device-config";
 
 export const VIEWPORTS: Record<string, DeviceConfig> = {
     desktop: {
@@ -25,8 +13,3 @@ export const VIEWPORTS: Record<string, DeviceConfig> = {
     },
 };
 
-export interface DeviceConfig {
-    width: number;
-    height: number;
-    ua: string;
-}

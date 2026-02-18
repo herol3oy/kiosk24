@@ -1,5 +1,6 @@
 import { chromium, BrowserContext } from 'playwright';
-import { BROWSER_ARGS, VIEWPORTS } from './config/constants';
+import { BROWSER_ARGS } from './config/browser-args';
+import { VIEWPORTS } from './config/viewports';
 import { fetchUrls } from './services/fetchUrls';
 import { processSingleUrl } from './core/processor';
 import { generateTimestampKey } from './utils/generateTimestampKey';
