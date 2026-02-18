@@ -34,11 +34,9 @@ async function takeScreenshots() {
 
     try {
         console.log("Initializing browser contexts...");
-        for (const [deviceName, config] of Object.entries(VIEWPORTS)) {
+        for (const [deviceName, deviceConfig] of Object.entries(VIEWPORTS)) {
             contextsByDevice[deviceName] = await browser.newContext({
-                userAgent: config.ua,
-                viewport: { width: config.width, height: config.height },
-                deviceScaleFactor: 1,
+                ...deviceConfig,
                 ignoreHTTPSErrors: true,
             });
         }
