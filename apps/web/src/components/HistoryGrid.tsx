@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { useQuery, QueryClientProvider } from '@tanstack/react-query';
+import { useMemo } from 'preact/hooks';
+import { useQuery, QueryClientProvider } from '@tanstack/preact-query';
 import { queryClient } from '../libs/queryClient';
 import type { ScreenshotEntry } from "../../../../libs/shared/src/types";
 import ScreenshotCarousel from './ScreenshotCarousel';

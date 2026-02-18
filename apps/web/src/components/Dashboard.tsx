@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { useQuery, useMutation, QueryClientProvider } from '@tanstack/react-query';
+import { useState, useRef } from 'preact/hooks';
+import { useQuery, useMutation, QueryClientProvider } from '@tanstack/preact-query';
 import { queryClient } from '../libs/queryClient';
 
 interface UrlEntry {
@@ -71,10 +71,10 @@ function Dashboard() {
         }
     };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = (e: Event) => {
         e.preventDefault();
 
-        const formData = new FormData(e.currentTarget);
+        const formData = new FormData(e.currentTarget as HTMLFormElement);
 
         addMutation.mutate({
             url: formData.get('url') as string,

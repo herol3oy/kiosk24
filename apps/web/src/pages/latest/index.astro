@@ -7,7 +7,7 @@ const currentDevice = deviceParam === "mobile" ? "mobile" : "desktop";
 ---
 
 <Layout title="Latest Screenshots">
-  <LatestGridWrapper client:only="react" device={currentDevice}>
+  <LatestGridWrapper client:only="preact" device={currentDevice}>
      <div slot="fallback" class="flex justify-center py-20">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
      </div>

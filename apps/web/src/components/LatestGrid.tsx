@@ -1,4 +1,4 @@
-import { useQuery, QueryClientProvider } from '@tanstack/react-query';
+import { useQuery, QueryClientProvider } from '@tanstack/preact-query';
 import { queryClient } from '../libs/queryClient'; 
 import type { ScreenshotEntry } from "../../../../libs/shared/src/types";
 

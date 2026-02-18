@@ -1,9 +1,9 @@
-import { useQuery, QueryClientProvider } from '@tanstack/react-query';
+import { useQuery, QueryClientProvider } from '@tanstack/preact-query';
 import { queryClient } from '../libs/queryClient';
 import { navigate } from 'astro:transitions/client';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'preact/hooks';
 
 const baseUrl = '/api';
 
