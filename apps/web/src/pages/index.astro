@@ -16,7 +16,7 @@ const currentDate = dateParam || today;
 
 <Layout title={`History - ${currentDate}`}>
   <HistoryGridWrapper 
-    client:only="preact" 
+    client:load 
     date={currentDate} 
     device={currentDevice}
     baseUrl={baseUrl}
