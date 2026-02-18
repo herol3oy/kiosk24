@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "web",
+	"name": "kiosk24-web",
 	"main": "./dist/_worker.js/index.js",
 	"compatibility_date": "2025-09-27",
 	"compatibility_flags": [
@@ -46,5 +46,5 @@
 	 * Service Bindings (communicate between multiple Workers)
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
 	 */
-	"services": [  {   "binding": "API_WORKER",   "service": "api"  } ]
+	"services": [  {   "binding": "API_WORKER",   "service": "kiosk24-api"  } ]
 }
