@@ -1,0 +1,29 @@
+---
+import Layout from "../layouts/Layout.astro";
+import HistoryGridWrapper from "../components/HistoryGrid";
+
+const isProd = import.meta.env.PROD;
+const baseUrl = '/api';
+const cdn = isProd ? "https://cdn.kiosk24.site" : import.meta.env.PUBLIC_API_URL;
+
+const deviceParam = Astro.url.searchParams.get("device");
+const dateParam = Astro.url.searchParams.get("date");
+
+const currentDevice = deviceParam === "mobile" ? "mobile" : "desktop";
+const today = new Date().toISOString().split("T")[0];
+const currentDate = dateParam || today;
+---
+
+<Layout title={`History - ${currentDate}`}>
+  <HistoryGridWrapper 
+    client:only="react" 
+    date={currentDate} 
+    device={currentDevice}
+    baseUrl={baseUrl}
+    cdn={cdn}
+  >
+    <div slot="fallback" class="h-screen flex justify-center pt-20">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    </div>
+  </HistoryGridWrapper>
+</Layout>

@@ -1,0 +1,30 @@
+---
+import "../styles/global.css";
+import { ClientRouter } from "astro:transitions";
+import TopBar from "../components/TopBar";
+
+interface Props {
+    title: string;
+}
+
+const { title } = Astro.props;
+const currentPath = Astro.url.pathname;
+const currentUrl = Astro.url.href;
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{title}</title>
+        <ClientRouter />
+    </head>
+    <body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+        <TopBar currentPath={currentPath} currentUrl={currentUrl} client:load />
+
+        <main class="flex-1 w-full px-4 sm:px-6 py-6">
+            <slot />
+        </main>
+    </body>
+</html>

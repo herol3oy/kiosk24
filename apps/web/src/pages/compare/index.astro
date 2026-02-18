@@ -1,0 +1,792 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+const isProd = import.meta.env.PROD;
+const baseUrl = isProd
+    ? "https://api.kiosk24.site"
+    : import.meta.env.PUBLIC_API_URL;
+const cdn = isProd
+    ? "https://cdn.kiosk24.site"
+    : import.meta.env.PUBLIC_API_URL;
+
+const l_url = Astro.url.searchParams.get("l_url");
+const l_date = Astro.url.searchParams.get("l_date");
+const l_hour = Astro.url.searchParams.get("l_hour");
+
+const r_url = Astro.url.searchParams.get("r_url");
+const r_date = Astro.url.searchParams.get("r_date");
+const r_hour = Astro.url.searchParams.get("r_hour");
+
+async function getPanelData(
+    urlParam: string | null,
+    dateParam: string | null,
+    hourParam: string | null,
+) {
+    const data = {
+        dates: [] as string[],
+        hours: [] as number[],
+        screenshot: null as any,
+    };
+
+    if (!urlParam) return data;
+
+    try {
+        const res = await fetch(
+            `${baseUrl}/available-dates?url=${encodeURIComponent(urlParam)}`,
+        );
+        if (res.ok) data.dates = await res.json();
+    } catch (e) {
+        console.error(`Error fetching dates for ${urlParam}`, e);
+    }
+
+    if (!dateParam) return data;
+
+    try {
+        const res = await fetch(
+            `${baseUrl}/screenshots?url=${encodeURIComponent(urlParam)}&date=${dateParam}&device=desktop`,
+        );
+
+        if (res.ok) {
+            const shots: any[] = await res.json();
+
+            const hourMap = new Map();
+            shots.forEach((shot) => {
+                const h = new Date(shot.created_at).getHours();
+                if (!hourMap.has(h)) hourMap.set(h, shot);
+            });
+
+            data.hours = Array.from(hourMap.keys()).sort((a, b) => a - b);
+
+            if (hourParam) {
+                data.screenshot = hourMap.get(parseInt(hourParam));
+            }
+        }
+    } catch (e) {
+        console.error(`Error fetching screenshots for ${urlParam}`, e);
+    }
+
+    return data;
+}
+
+let allUrls: { url: string; language: string }[] = [];
+try {
+    const res = await fetch(`${baseUrl}/urls`);
+    if (res.ok) allUrls = await res.json();
+} catch (e) {
+    console.error("Error fetching URL list", e);
+}
+
+const [leftData, rightData] = await Promise.all([
+    getPanelData(l_url, l_date, l_hour),
+    getPanelData(r_url, r_date, r_hour),
+]);
+
+const getHostname = (u: string) => {
+    try {
+        return new URL(u).hostname.replace("www.", "");
+    } catch (e) {
+        return u;
+    }
+};
+
+const getFavicon = (u: string) =>
+    `https://www.google.com/s2/favicons?domain=${u}&sz=32`;
+---
+
+<Layout title="Compare Screenshots">
+    <div class="max-w-400 mx-auto p-4 md:p-6 space-y-6">
+        <header
+            class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4"
+        >
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">
+                    Visual Comparison
+                </h1>
+                <p class="text-sm text-gray-500 mt-1">
+                    Select URL, date, and time to compare snapshots
+                    side-by-side.
+                </p>
+            </div>
+
+            {
+                (l_url || r_url) && (
+                    <a
+                        href={Astro.url.pathname}
+                        class="text-xs font-medium text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-md transition-colors"
+                    >
+                        Reset All Filters
+                    </a>
+                )
+            }
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <section
+                class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-full"
+            >
+                <div
+                    class="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between"
+                >
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                        <h3 class="text-sm font-bold text-gray-700">
+                            Left View
+                        </h3>
+                    </div>
+                    {
+                        l_url && (
+                            <span class="text-[10px] font-mono text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
+                                {getHostname(l_url)}
+                            </span>
+                        )
+                    }
+                </div>
+
+                <div class="flex flex-col md:flex-row h-full">
+                    <div
+                        class="p-4 md:w-64 md:border-r border-b md:border-b-0 border-gray-100 bg-gray-50/30 flex flex-col gap-4 shrink-0"
+                    >
+                        <div class="space-y-1">
+                            <label
+                                class="text-[10px] uppercase tracking-wider font-bold text-gray-400"
+                                >1. Select URL</label
+                            >
+                            <div
+                                class="custom-select relative group"
+                                id="l_url_wrapper"
+                            >
+                                <button
+                                    type="button"
+                                    class="w-full bg-white border border-gray-200 text-gray-700 text-sm rounded-lg p-2.5 shadow-sm text-left flex items-center gap-2 focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-colors"
+                                >
+                                    {
+                                        l_url ? (
+                                            <>
+                                                <img
+                                                    src={getFavicon(l_url)}
+                                                    class="w-4 h-4 shrink-0"
+                                                />
+                                                <span class="truncate">
+                                                    {getHostname(l_url)}
+                                                </span>
+                                            </>
+                                        ) : (
+                                            <span class="text-gray-400">
+                                                Choose Site...
+                                            </span>
+                                        )
+                                    }
+                                    <svg
+                                        class="w-4 h-4 ml-auto text-gray-400 shrink-0"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        ><path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M19 9l-7 7-7-7"></path></svg
+                                    >
+                                </button>
+
+                                <input
+                                    type="hidden"
+                                    class="panel-select"
+                                    data-param="l_url"
+                                    value={l_url || ""}
+                                />
+
+                                <div
+                                    class="dropdown-menu hidden absolute z-50 top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-80 overflow-y-auto custom-scrollbar"
+                                >
+                                    {
+                                        allUrls.map((u) => (
+                                            <div
+                                                class="dropdown-item flex items-center gap-3 p-2.5 hover:bg-blue-50 cursor-pointer border-b border-gray-50 last:border-0 transition-colors"
+                                                data-value={u.url}
+                                            >
+                                                <img
+                                                    src={getFavicon(u.url)}
+                                                    class="w-4 h-4 shrink-0"
+                                                    loading="lazy"
+                                                />
+                                                <span class="text-sm text-gray-700">
+                                                    {getHostname(u.url)}
+                                                </span>
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label
+                                class="text-[10px] uppercase tracking-wider font-bold text-gray-400"
+                                >2. Select Date</label
+                            >
+                            <div class="relative">
+                                <div
+                                    class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                                >
+                                    <svg
+                                        class="w-4 h-4 text-gray-400"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        ><path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                        ></path></svg
+                                    >
+                                </div>
+                                <select
+                                    class="panel-select w-full bg-white border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-9 p-2.5 shadow-sm disabled:bg-gray-100 disabled:text-gray-400"
+                                    data-param="l_date"
+                                    disabled={!l_url}
+                                >
+                                    <option value=""
+                                        >{
+                                            l_url
+                                                ? "Choose Date..."
+                                                : "Waiting for URL..."
+                                        }</option
+                                    >
+                                    {
+                                        leftData.dates.map((d) => (
+                                            <option
+                                                value={d}
+                                                selected={d === l_date}
+                                            >
+                                                {d}
+                                            </option>
+                                        ))
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label
+                                class="text-[10px] uppercase tracking-wider font-bold text-gray-400"
+                                >3. Select Hour</label
+                            >
+                            <div class="relative">
+                                <div
+                                    class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                                >
+                                    <svg
+                                        class="w-4 h-4 text-gray-400"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        ><path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        ></path></svg
+                                    >
+                                </div>
+                                <select
+                                    class="panel-select w-full bg-white border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-9 p-2.5 shadow-sm disabled:bg-gray-100 disabled:text-gray-400"
+                                    data-param="l_hour"
+                                    disabled={!l_date}
+                                >
+                                    <option value=""
+                                        >{
+                                            l_date
+                                                ? "Choose Time..."
+                                                : "Waiting for Date..."
+                                        }</option
+                                    >
+                                    {
+                                        leftData.hours.map((h) => (
+                                            <option
+                                                value={h}
+                                                selected={
+                                                    h.toString() === l_hour
+                                                }
+                                            >
+                                                {h.toString().padStart(2, "0")}
+                                                :00
+                                            </option>
+                                        ))
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        {
+                            leftData.screenshot && (
+                                <div class="mt-auto pt-4 border-t border-gray-200 text-[10px] text-gray-400 space-y-1">
+                                    <p>
+                                        Status:{" "}
+                                        <span
+                                            class={
+                                                leftData.screenshot
+                                                    .job_status === "ok"
+                                                    ? "text-green-600 font-bold"
+                                                    : "text-red-600 font-bold"
+                                            }
+                                        >
+                                            {leftData.screenshot.job_status.toUpperCase()}
+                                        </span>
+                                    </p>
+                                    <p>
+                                        Captured:{" "}
+                                        <span class="font-mono">
+                                            {new Date(
+                                                leftData.screenshot.created_at,
+                                            ).toLocaleTimeString()}
+                                        </span>
+                                    </p>
+                                </div>
+                            )
+                        }
+                    </div>
+
+                    <div
+                        class="flex-1 relative bg-gray-100/50 min-h-100 flex items-center justify-center group overflow-hidden"
+                    >
+                        {
+                            !leftData.screenshot ? (
+                                <div class="text-center p-8">
+                                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 text-gray-300 mb-3">
+                                        <svg
+                                            class="w-6 h-6"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                            />
+                                        </svg>
+                                    </div>
+                                    <p class="text-sm text-gray-400">
+                                        Select options from the left
+                                        <br />
+                                        to load snapshot.
+                                    </p>
+                                </div>
+                            ) : leftData.screenshot.job_status === "failed" ? (
+                                <div class="flex flex-col items-center justify-center text-red-400">
+                                    <span class="text-4xl mb-2">⚠️</span>
+                                    <span class="text-sm font-bold uppercase tracking-wide">
+                                        Screenshot Failed
+                                    </span>
+                                </div>
+                            ) : (
+                                <div class="w-full h-full relative overflow-auto custom-scrollbar">
+                                    <img
+                                        src={`${cdn}/${leftData.screenshot.r2_key}`}
+                                        class="w-full h-auto object-contain shadow-sm"
+                                        alt="Left Screenshot"
+                                    />
+                                    <a
+                                        href={`${cdn}/${leftData.screenshot.r2_key}`}
+                                        target="_blank"
+                                        class="absolute top-2 right-2 bg-white/90 hover:bg-white p-1.5 rounded shadow-sm text-gray-600 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100"
+                                        title="Open in new tab"
+                                    >
+                                        <svg
+                                            class="w-4 h-4"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                            />
+                                        </svg>
+                                    </a>
+                                </div>
+                            )
+                        }
+                    </div>
+                </div>
+            </section>
+
+            <section
+                class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-full"
+            >
+                <div
+                    class="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between"
+                >
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                        <h3 class="text-sm font-bold text-gray-700">
+                            Right View
+                        </h3>
+                    </div>
+                    {
+                        r_url && (
+                            <span class="text-[10px] font-mono text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
+                                {getHostname(r_url)}
+                            </span>
+                        )
+                    }
+                </div>
+
+                <div class="flex flex-col md:flex-row h-full">
+                    <div
+                        class="p-4 md:w-64 md:border-r border-b md:border-b-0 border-gray-100 bg-gray-50/30 flex flex-col gap-4 shrink-0"
+                    >
+                        <div class="space-y-1">
+                            <label
+                                class="text-[10px] uppercase tracking-wider font-bold text-gray-400"
+                                >1. Select URL</label
+                            >
+                            <div
+                                class="custom-select relative group"
+                                id="r_url_wrapper"
+                            >
+                                <button
+                                    type="button"
+                                    class="w-full bg-white border border-gray-200 text-gray-700 text-sm rounded-lg p-2.5 shadow-sm text-left flex items-center gap-2 focus:ring-2 focus:ring-purple-500 hover:border-purple-300 transition-colors"
+                                >
+                                    {
+                                        r_url ? (
+                                            <>
+                                                <img
+                                                    src={getFavicon(r_url)}
+                                                    class="w-4 h-4 shrink-0"
+                                                />
+                                                <span class="truncate">
+                                                    {getHostname(r_url)}
+                                                </span>
+                                            </>
+                                        ) : (
+                                            <span class="text-gray-400">
+                                                Choose Site...
+                                            </span>
+                                        )
+                                    }
+                                    <svg
+                                        class="w-4 h-4 ml-auto text-gray-400 shrink-0"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        ><path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M19 9l-7 7-7-7"></path></svg
+                                    >
+                                </button>
+
+                                <input
+                                    type="hidden"
+                                    class="panel-select"
+                                    data-param="r_url"
+                                    value={r_url || ""}
+                                />
+
+                                <div
+                                    class="dropdown-menu hidden absolute z-50 top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-80 overflow-y-auto custom-scrollbar"
+                                >
+                                    {
+                                        allUrls.map((u) => (
+                                            <div
+                                                class="dropdown-item flex items-center gap-3 p-2.5 hover:bg-purple-50 cursor-pointer border-b border-gray-50 last:border-0 transition-colors"
+                                                data-value={u.url}
+                                            >
+                                                <img
+                                                    src={getFavicon(u.url)}
+                                                    class="w-4 h-4 shrink-0"
+                                                    loading="lazy"
+                                                />
+                                                <span class="text-sm text-gray-700">
+                                                    {getHostname(u.url)}
+                                                </span>
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label
+                                class="text-[10px] uppercase tracking-wider font-bold text-gray-400"
+                                >2. Select Date</label
+                            >
+                            <div class="relative">
+                                <div
+                                    class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                                >
+                                    <svg
+                                        class="w-4 h-4 text-gray-400"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        ><path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                        ></path></svg
+                                    >
+                                </div>
+                                <select
+                                    class="panel-select w-full bg-white border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block pl-9 p-2.5 shadow-sm disabled:bg-gray-100 disabled:text-gray-400"
+                                    data-param="r_date"
+                                    disabled={!r_url}
+                                >
+                                    <option value=""
+                                        >{
+                                            r_url
+                                                ? "Choose Date..."
+                                                : "Waiting for URL..."
+                                        }</option
+                                    >
+                                    {
+                                        rightData.dates.map((d) => (
+                                            <option
+                                                value={d}
+                                                selected={d === r_date}
+                                            >
+                                                {d}
+                                            </option>
+                                        ))
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label
+                                class="text-[10px] uppercase tracking-wider font-bold text-gray-400"
+                                >3. Select Hour</label
+                            >
+                            <div class="relative">
+                                <div
+                                    class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                                >
+                                    <svg
+                                        class="w-4 h-4 text-gray-400"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        ><path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        ></path></svg
+                                    >
+                                </div>
+                                <select
+                                    class="panel-select w-full bg-white border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block pl-9 p-2.5 shadow-sm disabled:bg-gray-100 disabled:text-gray-400"
+                                    data-param="r_hour"
+                                    disabled={!r_date}
+                                >
+                                    <option value=""
+                                        >{
+                                            r_date
+                                                ? "Choose Time..."
+                                                : "Waiting for Date..."
+                                        }</option
+                                    >
+                                    {
+                                        rightData.hours.map((h) => (
+                                            <option
+                                                value={h}
+                                                selected={
+                                                    h.toString() === r_hour
+                                                }
+                                            >
+                                                {h.toString().padStart(2, "0")}
+                                                :00
+                                            </option>
+                                        ))
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        {
+                            rightData.screenshot && (
+                                <div class="mt-auto pt-4 border-t border-gray-200 text-[10px] text-gray-400 space-y-1">
+                                    <p>
+                                        Status:{" "}
+                                        <span
+                                            class={
+                                                rightData.screenshot
+                                                    .job_status === "ok"
+                                                    ? "text-green-600 font-bold"
+                                                    : "text-red-600 font-bold"
+                                            }
+                                        >
+                                            {rightData.screenshot.job_status.toUpperCase()}
+                                        </span>
+                                    </p>
+                                    <p>
+                                        Captured:{" "}
+                                        <span class="font-mono">
+                                            {new Date(
+                                                rightData.screenshot.created_at,
+                                            ).toLocaleTimeString()}
+                                        </span>
+                                    </p>
+                                </div>
+                            )
+                        }
+                    </div>
+
+                    <div
+                        class="flex-1 relative bg-gray-100/50 min-h-100 flex items-center justify-center group overflow-hidden"
+                    >
+                        {
+                            !rightData.screenshot ? (
+                                <div class="text-center p-8">
+                                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 text-gray-300 mb-3">
+                                        <svg
+                                            class="w-6 h-6"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                            />
+                                        </svg>
+                                    </div>
+                                    <p class="text-sm text-gray-400">
+                                        Select options from the left
+                                        <br />
+                                        to load snapshot.
+                                    </p>
+                                </div>
+                            ) : rightData.screenshot.job_status === "failed" ? (
+                                <div class="flex flex-col items-center justify-center text-red-400">
+                                    <span class="text-4xl mb-2">⚠️</span>
+                                    <span class="text-sm font-bold uppercase tracking-wide">
+                                        Screenshot Failed
+                                    </span>
+                                </div>
+                            ) : (
+                                <div class="w-full h-full relative overflow-auto custom-scrollbar">
+                                    <img
+                                        src={`${cdn}/${rightData.screenshot.r2_key}`}
+                                        class="w-full h-auto object-contain shadow-sm"
+                                        alt="Right Screenshot"
+                                    />
+                                    <a
+                                        href={`${cdn}/${rightData.screenshot.r2_key}`}
+                                        target="_blank"
+                                        class="absolute top-2 right-2 bg-white/90 hover:bg-white p-1.5 rounded shadow-sm text-gray-600 hover:text-purple-600 transition-colors opacity-0 group-hover:opacity-100"
+                                        title="Open in new tab"
+                                    >
+                                        <svg
+                                            class="w-4 h-4"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                            />
+                                        </svg>
+                                    </a>
+                                </div>
+                            )
+                        }
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</Layout>
+
+<script>
+    import { navigate } from "astro:transitions/client";
+
+    document.addEventListener("astro:page-load", () => {
+        const customSelects = document.querySelectorAll(".custom-select");
+
+        document.addEventListener("click", (e) => {
+            if (!(e.target as HTMLElement).closest(".custom-select")) {
+                document
+                    .querySelectorAll(".dropdown-menu")
+                    .forEach((m) => m.classList.add("hidden"));
+            }
+        });
+
+        customSelects.forEach((wrapper) => {
+            const btn = wrapper.querySelector("button");
+            const menu = wrapper.querySelector(".dropdown-menu");
+            const hiddenInput = wrapper.querySelector("input");
+            const items = wrapper.querySelectorAll(".dropdown-item");
+
+            if (!btn || !menu || !hiddenInput) return;
+
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                document.querySelectorAll(".dropdown-menu").forEach((m) => {
+                    if (m !== menu) m.classList.add("hidden");
+                });
+                menu.classList.toggle("hidden");
+            });
+
+            items.forEach((item) => {
+                item.addEventListener("click", (e) => {
+                    const val = (e.currentTarget as HTMLElement).dataset.value;
+                    if (val) {
+                        hiddenInput.value = val;
+                        hiddenInput.dispatchEvent(
+                            new Event("change", { bubbles: true }),
+                        );
+                        menu.classList.add("hidden");
+                    }
+                });
+            });
+        });
+
+        const allInputs = document.querySelectorAll(".panel-select");
+
+        allInputs.forEach((input) => {
+            input.addEventListener("change", (e) => {
+                const target = e.target as HTMLInputElement | HTMLSelectElement;
+                const paramName = target.dataset.param;
+                const value = target.value;
+                const url = new URL(window.location.href);
+
+                if (paramName) {
+                    if (value) {
+                        url.searchParams.set(paramName, value);
+                    } else {
+                        url.searchParams.delete(paramName);
+                    }
+
+                    if (paramName.endsWith("_url")) {
+                        const prefix = paramName.split("_")[0];
+                        url.searchParams.delete(`${prefix}_date`);
+                        url.searchParams.delete(`${prefix}_hour`);
+                    }
+                    if (paramName.endsWith("_date")) {
+                        const prefix = paramName.split("_")[0];
+                        url.searchParams.delete(`${prefix}_hour`);
+                    }
+                }
+
+                navigate(url.toString());
+            });
+        });
+    });
+</script>

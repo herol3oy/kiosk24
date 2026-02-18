@@ -1,0 +1,40 @@
+import { ENV } from '../config/env';
+
+export async function uploadScreenshot(
+    buffer: Buffer | null, 
+    metadata: {
+        url: string;
+        language: string;
+        objectKey: string | null;
+        deviceName: string;
+        capturedAt: string;
+        status: 'ok' | 'failed'; 
+    }
+) {
+    const formData = new FormData();
+
+    if (buffer && metadata.status === 'ok') {
+        const fileBlob = new Blob([new Uint8Array(buffer)], { type: 'image/jpeg' });
+        formData.append('image', fileBlob, 'screenshot.jpg');
+    }
+
+    formData.append('url', metadata.url);
+    formData.append('language', metadata.language);
+    formData.append('objectKey', metadata.objectKey ?? ''); 
+    formData.append('deviceName', metadata.deviceName);
+    formData.append('capturedAt', metadata.capturedAt);
+    formData.append('jobStatus', metadata.status);
+
+    const response = await fetch(ENV.UPLOAD_ENDPOINT, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${ENV.API_KEY}`
+        },
+        body: formData
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API Upload failed: ${response.status} - ${errorText}`);
+    }
+}

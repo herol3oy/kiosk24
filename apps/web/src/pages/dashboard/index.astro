@@ -1,0 +1,10 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Dashboard from "../../components/Dashboard";
+
+export const prerender = false;
+---
+
+<Layout title="Dashboard - Kiosk24">
+    <Dashboard client:load />
+</Layout>
