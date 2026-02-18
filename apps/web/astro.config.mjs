@@ -5,7 +5,7 @@ import cloudflare from '@astrojs/cloudflare';
 
 import tailwindcss from '@tailwindcss/vite';
 
-import react from '@astrojs/react';
+import preact from '@astrojs/preact';
 
 export default defineConfig({
   output: 'server',
@@ -22,5 +22,5 @@ export default defineConfig({
     plugins: [tailwindcss()]
   },
 
-  integrations: [react()]
+  integrations: [preact()]
 });
