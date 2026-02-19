@@ -2,12 +2,11 @@ import { useQuery, QueryClientProvider } from '@tanstack/preact-query';
 import { queryClient } from '../libs/queryClient'; 
 import type { ScreenshotEntry } from "../../../../libs/shared/src/types";
 
-const isProd = import.meta.env.PROD;
-const baseUrl = '/api'
-const cdn = isProd ? "https://cdn.kiosk24.site" : import.meta.env.PUBLIC_API_URL;
 
 interface Props {
     device: "mobile" | "desktop";
+    baseUrl: string;
+    cdn: string;
 }
 
 export default function LatestGridWrapper(props: Props) {
@@ -18,7 +17,7 @@ export default function LatestGridWrapper(props: Props) {
     );
 }
 
-function LatestGridInner({ device }: Props) {
+function LatestGridInner({ device, baseUrl, cdn }: Props) {
     const isDesktop = device === "desktop";
 
     const { data: items = [], isLoading, isError } = useQuery({
