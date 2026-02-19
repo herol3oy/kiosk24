@@ -41,10 +41,17 @@
 	 * Note: Use secrets to store sensitive data.
 	 * https://developers.cloudflare.com/workers/configuration/secrets/
 	 */
-	// "vars": {  "MY_VARIABLE": "production_value" }
+	"vars": {
+		"PUBLIC_CDN_URL": "https://cdn.kiosk24.site"
+	},
 	/**
 	 * Service Bindings (communicate between multiple Workers)
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
 	 */
-	"services": [  {   "binding": "API_WORKER",   "service": "kiosk24-api"  } ]
+	"services": [
+		{
+			"binding": "API_WORKER",
+			"service": "kiosk24-api"
+		}
+	]
 }

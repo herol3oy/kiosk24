@@ -2,7 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import HistoryGridWrapper from "../components/HistoryGrid";
 
-const cdn = import.meta.env.PUBLIC_CDN_URL;
+const cdn = process.env.PUBLIC_CDN_URL || "http://localhost:8787";
 
 const deviceParam = Astro.url.searchParams.get("device");
 const dateParam = Astro.url.searchParams.get("date");
