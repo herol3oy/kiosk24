@@ -48,8 +48,6 @@ async function takeScreenshots() {
                 console.error(`Unexpected crash processing ${urlData.url}:`, e);
                 failCount++;
             }
-
-            await new Promise(r => setTimeout(r, 1000));
         }
 
     } catch (err) {

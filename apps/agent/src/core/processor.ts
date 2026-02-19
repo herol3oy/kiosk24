@@ -14,7 +14,7 @@ export async function processSingleUrl(
     const capturedAt = new Date().toISOString();
     const urlKey = getUrlKey(url);
 
-    for (const [deviceName, context] of Object.entries(contextsByDevice)) {
+    const devicePromises = Object.entries(contextsByDevice).map(async ([deviceName, context]) => {
         const objectKey = `${urlKey}/${deviceName}/${timestampIso}.jpg`;
         let page: Page | null = null;
 
@@ -23,8 +23,7 @@ export async function processSingleUrl(
 
             page = await context.newPage();
 
-            await page.goto(url, { timeout: 45000, waitUntil: 'domcontentloaded' });
-            await page.waitForTimeout(2500);
+            await page.goto(url, { timeout: 45000, waitUntil: 'load' });
 
             await page.evaluate(getJsCleanup());
 
@@ -35,41 +34,46 @@ export async function processSingleUrl(
 
             console.log(`[${new Date().toISOString()}] Sending ${url} [${deviceName}] to API`);
 
-            await uploadScreenshot(buffer, {
+            uploadScreenshot(buffer, {
                 url,
                 language,
                 objectKey,
                 deviceName,
                 capturedAt,
                 status: 'ok'
+            }).then(() => {
+                console.log(`[${new Date().toISOString()}] Upload successful for ${objectKey}`);
+            }).catch((err) => {
+                console.error(`Failed background upload for ${objectKey}:`, err);
             });
-
-            console.log(`[${new Date().toISOString()}] Upload successful for ${objectKey}`);
 
         } catch (error) {
             console.error(`Error for ${url} [${deviceName}]:`, error);
 
             try {
                 console.log(`[${new Date().toISOString()}] Reporting failure for ${url} [${deviceName}]`);
-                
-                await uploadScreenshot(null, {
+
+                uploadScreenshot(null, {
                     url,
                     language,
                     objectKey: null,
                     deviceName,
                     capturedAt,
                     status: 'failed'
+                }).catch((err) => {
+                    console.error(`CRITICAL: Failed to report failure for ${url} [${deviceName}]:`, err);
                 });
-                
-                console.log(`[${new Date().toISOString()}] Failure reported successfully for ${objectKey}`);
+
             } catch (uploadError) {
-                console.error(`CRITICAL: Failed to report failure for ${url} [${deviceName}]:`, uploadError);
+                console.error(`CRITICAL: Failed to initiate failure report for ${url} [${deviceName}]:`, uploadError);
             }
 
         } finally {
             if (page) {
-                await page.close().catch(() => {});
+                await page.close().catch(() => { });
             }
         }
-    }
+    });
+
+    await Promise.all(devicePromises);
 }
