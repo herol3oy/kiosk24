@@ -1,7 +1,7 @@
 import { chromium, BrowserContext } from 'playwright';
 import { BROWSER_ARGS } from './config/browser-args';
 import { VIEWPORTS } from './config/viewports';
-import { fetchUrls } from './services/fetchUrls';
+import { requestUrls } from './services/requestUrls';
 import { processSingleUrl } from './core/processor';
 import { generateTimestampKey } from './utils/generateTimestampKey';
 
@@ -9,16 +9,10 @@ async function takeScreenshots() {
     const start = new Date();
     console.log(`[${start.toISOString()}] Starting Batch Screenshot Job`);
 
-    let urls;
-    try {
-        urls = await fetchUrls();
-    } catch (e) {
-        console.error("Failed to fetch URLs from API:", e);
-        return;
-    }
+    const urls = await requestUrls();
 
-    if (!urls || !urls.length) {
-        console.log("No URLs received from API. Exiting.");
+    if (!urls.length) {
+        console.log("No URLs received from API.");
         return;
     }
 
