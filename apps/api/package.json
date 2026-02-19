@@ -1,5 +1,5 @@
 {
-  "name": "kiosk24-api",
+  "name": "api",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
