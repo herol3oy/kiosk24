@@ -50,13 +50,9 @@ function HistoryGridInner({ date, device, baseUrl, cdn }: HistoryGridProps) {
                 const group = groupedItems[url];
                 if (!group) return null;
 
-                let hostname = "Unknown";
-                let favicon = "";
-                try {
-                    const urlObj = new URL(url);
-                    hostname = urlObj.hostname.replace("www.", "");
-                    favicon = `https://www.google.com/s2/favicons?domain=${url}&sz=32`;
-                } catch (e) { hostname = url; }
+                const { hostname } = new URL(url);
+                const cleanHost = hostname.replace(/^www\./, "");
+                const favicon = `https://www.google.com/s2/favicons?domain=${url}&sz=32`;
 
                 return (
                     <div key={url} className="border-b border-gray-200 pb-8 last:border-0">
@@ -70,7 +66,7 @@ function HistoryGridInner({ date, device, baseUrl, cdn }: HistoryGridProps) {
                             />
                             <h2 className="text-lg font-bold text-gray-800">
                                 <a href={url} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 hover:underline">
-                                    {hostname}
+                                    {cleanHost}
                                 </a>
                             </h2>
                             <span className="text-xs font-mono text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full ml-auto">
