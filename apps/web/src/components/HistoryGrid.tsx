@@ -56,37 +56,33 @@ function HistoryGridInner({ date, device, baseUrl, cdn }: HistoryGridProps) {
 
                 return (
                     <div key={url} className="border-b border-gray-200 pb-8 last:border-0">
-                        <header className="flex items-center gap-3 mb-4 sticky top-0 bg-white/95 backdrop-blur z-10 py-2 border-b border-gray-50">
-                            <img
-                                src={favicon}
-                                alt="fav icon"
-                                loading="lazy"
-                                className="w-5 h-5 opacity-80"
-                                onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0" }}
-                            />
+                        <header className="sticky top-0 z-10 mb-4 flex items-center gap-3 border-b border-gray-50 bg-white/95 py-2 backdrop-blur">
+                            {favicon && (
+                                <img
+                                    src={favicon}
+                                    alt=""
+                                    loading="lazy"
+                                    className="h-5 w-5 opacity-80"
+                                    onError={(e) => ((e.currentTarget as HTMLImageElement).style.opacity = "0")}
+                                />
+                            )}
+
                             <h2 className="text-lg font-bold text-gray-800">
                                 <a href={url} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 hover:underline">
                                     {cleanHost}
                                 </a>
                             </h2>
-                            <span className="text-xs font-mono text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full ml-auto">
+                            <span className="ml-auto rounded-full bg-gray-100 px-2 py-0.5 text-xs font-mono text-gray-400">
                                 {group.length} snapshots
                             </span>
                         </header>
 
                         <div className="flex flex-wrap gap-4">
                             <ScreenshotCarousel group={group} device={device} cdn={cdn} />
-
                         </div>
                     </div>
                 );
             })}
-
-            {sortedUrls.length === 0 && (
-                <div className="text-center py-20 text-gray-400">
-                    No screenshots found for this date.
-                </div>
-            )}
         </div>
     );
 }
