@@ -2,9 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import HistoryGridWrapper from "../components/HistoryGrid";
 
-const isProd = import.meta.env.PROD;
-const baseUrl = '/api';
-const cdn = isProd ? "https://cdn.kiosk24.site" : import.meta.env.PUBLIC_API_URL;
+const cdn = import.meta.env.PUBLIC_CDN_URL;
 
 const deviceParam = Astro.url.searchParams.get("device");
 const dateParam = Astro.url.searchParams.get("date");
@@ -19,7 +17,7 @@ const currentDate = dateParam || today;
     client:load 
     date={currentDate} 
     device={currentDevice}
-    baseUrl={baseUrl}
+    baseUrl={'/api'}
     cdn={cdn}
   >
     <div slot="fallback" class="h-screen flex justify-center pt-20">
