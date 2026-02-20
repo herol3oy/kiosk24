@@ -63,11 +63,11 @@ function HistoryGridInner({ date, device, cdn }: HistoryGridProps) {
                 const panelId = `carousel-panel-${cleanHost.replace(/[^a-zA-Z0-9]/g, '-')}`;
 
                 return (
-                    <article 
-                        key={url} 
+                    <article
+                        key={entry.id}
                         className="bg-white rounded-xl border border-gray-200 shadow-sm transition-shadow hover:shadow-md overflow-hidden"
                     >
-                        <header 
+                        <header
                             className="group flex flex-wrap items-center justify-between gap-4 p-4 bg-gray-50/50 cursor-pointer hover:bg-gray-100/80 transition-colors focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-inset"
                             onClick={() => toggleUrlExpansion(url)}
                             onKeyDown={(e) => {
@@ -111,21 +111,20 @@ function HistoryGridInner({ date, device, cdn }: HistoryGridProps) {
 
                             <div className="ml-auto flex items-center gap-2 text-sm font-medium text-gray-600">
                                 <span className="hidden sm:inline-block">
-                                    {isExpanded ? 'Hide' : 'View'}
+                                    {isExpanded ? "Hide" : "View"}
                                 </span>
-                                <svg 
-                                    className={`w-5 h-5 text-gray-400 group-hover:text-gray-600 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    viewBox="0 0 24 24"
+
+                                <span
+                                    className="text-base text-gray-400 group-hover:text-gray-600 transition-colors duration-200"
+                                    aria-hidden="true"
                                 >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
+                                    {isExpanded ? "⯅" : "⯆"}
+                                </span>
                             </div>
                         </header>
 
                         {isExpanded && (
-                            <div 
+                            <div
                                 id={panelId}
                                 className="p-4 border-t border-gray-100 bg-white"
                             >

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "preact/hooks";
 import useEmblaCarousel from "embla-carousel-react";
 import type { EmblaCarouselType } from "embla-carousel";
 import type { ScreenshotEntry } from "../../../../libs/shared/src/types";
-import { useQuery } from '@tanstack/preact-query';
+import { useQuery } from "@tanstack/preact-query";
 
 interface Props {
   url: string;
@@ -11,14 +11,23 @@ interface Props {
   cdn: string;
 }
 
-export default function ScreenshotCarousel({ url, date, device, cdn }: Props) {
+export default function ScreenshotCarousel({
+  url,
+  date,
+  device,
+  cdn,
+}: Props) {
   const { data: group = [], isLoading, isError } = useQuery({
-    queryKey: ['screenshots', url, date, device],
+    queryKey: ["screenshots", url, date, device],
     queryFn: async () => {
-      const res = await fetch(`/api/screenshots?url=${encodeURIComponent(url)}&date=${date}&device=${device}`);
-      if (!res.ok) throw new Error('Network response was not ok');
+      const res = await fetch(
+        `/api/screenshots?url=${encodeURIComponent(
+          url
+        )}&date=${date}&device=${device}`
+      );
+      if (!res.ok) throw new Error("Network response was not ok");
       return res.json() as Promise<ScreenshotEntry[]>;
-    }
+    },
   });
 
   const [emblaRef, emblaApi] = useEmblaCarousel({
@@ -42,8 +51,29 @@ export default function ScreenshotCarousel({ url, date, device, cdn }: Props) {
   }, [emblaApi, onSelect]);
 
   const slideWidth = device === "desktop" ? "w-72" : "w-40";
-  const aspectRatio = device === "desktop" ? "aspect-[16/10]" : "aspect-[9/16]";
+  const aspectRatio =
+    device === "desktop" ? "aspect-[16/10]" : "aspect-[9/16]";
   const thumbWidth = device === "desktop" ? 400 : 240;
+
+  function buildImageUrls(
+    cdn: string,
+    key: string,
+    thumbWidth: number
+  ) {
+    const isLocal = cdn.includes("localhost");
+
+    if (isLocal) {
+      return {
+        full: `${cdn}/${key}`,
+        thumb: `${cdn}/${key}`,
+      };
+    }
+
+    return {
+      full: `${cdn}/cdn-cgi/image/width=1600,quality=60,format=auto/${key}`,
+      thumb: `${cdn}/cdn-cgi/image/width=${thumbWidth},quality=50,fit=cover,format=auto/${key}`,
+    };
+  }
 
   if (isLoading) {
     return (
@@ -83,12 +113,20 @@ export default function ScreenshotCarousel({ url, date, device, cdn }: Props) {
       <div className="overflow-hidden w-full" ref={emblaRef}>
         <div className="flex">
           {group.map((item, i) => {
-            const dateFormatted = new Date(item.created_at).toLocaleString([], {
+            const dateFormatted = new Date(
+              item.created_at
+            ).toLocaleString([], {
               month: "short",
               day: "numeric",
               hour: "2-digit",
               minute: "2-digit",
             });
+
+            const { full, thumb } = buildImageUrls(
+              cdn,
+              item.r2_key,
+              thumbWidth
+            );
 
             return (
               <div
@@ -98,17 +136,16 @@ export default function ScreenshotCarousel({ url, date, device, cdn }: Props) {
                 aria-roledescription="slide"
               >
                 <article className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow flex flex-col group">
-
                   {item.job_status === "ok" ? (
                     <a
-                      href={`${cdn}/cdn-cgi/image/width=1600,quality=60,format=auto/${item.r2_key}`}
+                      href={full}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={`relative bg-gray-50 block overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500 ${aspectRatio}`}
                       aria-label={`View full screenshot from ${dateFormatted}`}
                     >
                       <img
-                        src={`${cdn}/cdn-cgi/image/width=${thumbWidth},quality=50,fit=cover,format=auto/${item.r2_key}`}
+                        src={thumb}
                         loading="lazy"
                         decoding="async"
                         fetchpriority="low"
@@ -117,8 +154,15 @@ export default function ScreenshotCarousel({ url, date, device, cdn }: Props) {
                       />
                     </a>
                   ) : (
-                    <div className={`relative bg-red-50 flex flex-col items-center justify-center text-red-400 border-b border-red-100 ${aspectRatio}`}>
-                      <span className="text-xl mb-1" aria-hidden="true">⚠️</span>
+                    <div
+                      className={`relative bg-red-50 flex flex-col items-center justify-center text-red-400 border-b border-red-100 ${aspectRatio}`}
+                    >
+                      <span
+                        className="text-xl mb-1"
+                        aria-hidden="true"
+                      >
+                        ⚠️
+                      </span>
                       <span className="text-[10px] font-semibold uppercase tracking-wide">
                         Failed
                       </span>
@@ -144,7 +188,7 @@ export default function ScreenshotCarousel({ url, date, device, cdn }: Props) {
           aria-label="Previous slide"
           className="p-2 text-gray-600 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-40 disabled:pointer-events-none"
         >
-          ⇽
+          <span className="block w-5 h-5 text-xl font-bold leading-5">❮ </span>
         </button>
 
         <button
@@ -153,7 +197,7 @@ export default function ScreenshotCarousel({ url, date, device, cdn }: Props) {
           aria-label="Next slide"
           className="p-2 text-gray-600 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-40 disabled:pointer-events-none"
         >
-          ⇾
+          <span className="block w-5 h-5 text-xl font-bold leading-5"> ❯ </span>
         </button>
       </div>
     </section>
