@@ -25,9 +25,10 @@ export default function TopBar({ currentPath, currentUrl }: TopBarProps) {
 
     const isDashboard = currentPath.includes("/dashboard");
     const isLatest = currentPath.includes("/latest");
+    const isCompare = currentPath.includes("/compare");
 
-    const showDatePicker = !isLatest && !isDashboard;
-    const showDeviceToggle = !isDashboard;
+    const showDatePicker = !isLatest && !isDashboard && !isCompare;
+    const showDeviceToggle = !isDashboard && !isCompare;
 
     const today = new Date().toISOString().split("T")[0];
     const currentDate = dateParam || today;
