@@ -2,6 +2,7 @@ import { useQuery, QueryClientProvider } from "@tanstack/preact-query";
 import { queryClient } from "../libs/queryClient";
 import type { ComponentChildren } from "preact";
 import { useEffect, useState } from "preact/hooks";
+import type { UrlEntry } from "../../../../libs/shared/src/types";
 
 interface SelectGroupProps {
     num: number;
@@ -154,7 +155,7 @@ function ComparePanel({
         : { dot: "bg-purple-500", hover: "hover:text-purple-600" };
 
     const { data: allUrls = [], isLoading: urlsLoading } = useQuery<
-        { id: string; url: string; language: string }[]
+        UrlEntry[]
     >({
         queryKey: ["allUrls", baseUrl],
         queryFn: async () => {
