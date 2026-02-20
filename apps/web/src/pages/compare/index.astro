@@ -11,6 +11,8 @@ const l_hour = Astro.url.searchParams.get("l_hour");
 const r_url = Astro.url.searchParams.get("r_url");
 const r_date = Astro.url.searchParams.get("r_date");
 const r_hour = Astro.url.searchParams.get("r_hour");
+const r_device = Astro.url.searchParams.get("r_device");
+const l_device = Astro.url.searchParams.get("l_device");    
 ---
 
 <Layout title="Compare Screenshots">
@@ -43,6 +45,7 @@ const r_hour = Astro.url.searchParams.get("r_hour");
                 url={l_url}
                 date={l_date}
                 hour={l_hour}
+                device={l_device}
             />
             <ComparePanelWrapper
                 client:load
@@ -52,6 +55,7 @@ const r_hour = Astro.url.searchParams.get("r_hour");
                 url={r_url}
                 date={r_date}
                 hour={r_hour}
+                device={r_device}
             />
         </div>
     </div>

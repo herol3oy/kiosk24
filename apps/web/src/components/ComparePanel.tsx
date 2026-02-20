@@ -34,6 +34,7 @@ interface ComparePanelProps {
     url: string | null;
     date: string | null;
     hour: string | null;
+    device: string | null;
 }
 
 const getUrlMeta = (url: string) => {
@@ -73,6 +74,7 @@ async function fetchPanelData(
     urlParam: string | null,
     dateParam: string | null,
     hourParam: string | null,
+    deviceParam: string | null,
 ): Promise<PanelData> {
     const data: PanelData = { dates: [], hours: [], screenshot: null };
     if (!urlParam) return data;
@@ -85,8 +87,11 @@ async function fetchPanelData(
 
         if (!dateParam) return data;
 
+        const device = deviceParam || "desktop";
         const shotsRes = await fetch(
-            `${baseUrl}/screenshots?url=${encodeURIComponent(urlParam)}&date=${dateParam}&device=desktop`,
+            `${baseUrl}/screenshots?url=${encodeURIComponent(urlParam)}&date=${dateParam}&device=${encodeURIComponent(
+                device,
+            )}`,
         );
         if (shotsRes.ok) {
             const shots: Screenshot[] = await shotsRes.json();
@@ -138,6 +143,7 @@ function ComparePanel({
     url,
     date,
     hour,
+    device,
 }: ComparePanelProps) {
     const isLeft = side === "left";
     const label = isLeft ? "Left View" : "Right View";
@@ -163,8 +169,8 @@ function ComparePanel({
     });
 
     const { data = { dates: [], hours: [], screenshot: null } } = useQuery({
-        queryKey: [side, url, date, hour],
-        queryFn: () => fetchPanelData(baseUrl, url, date, hour),
+        queryKey: [side, url, date, hour, device],
+        queryFn: () => fetchPanelData(baseUrl, url, date, hour, device),
     });
 
     const SelectGroup = ({
@@ -220,7 +226,7 @@ function ComparePanel({
                         labelTxt="Select URL"
                         value={url}
                         disabled={urlsLoading}
-                        onChange={(val: string) => updateUrlParams(`${paramPrefix}_url`, val, [`${paramPrefix}_date`, `${paramPrefix}_hour`])}
+                        onChange={(val: string) => updateUrlParams(`${paramPrefix}_url`, val, [`${paramPrefix}_device`, `${paramPrefix}_date`, `${paramPrefix}_hour`])}
                     >
                         <option value="">{urlsLoading ? "Loading..." : "Select URL"}</option>
                         {allUrls.map((u) => {
@@ -235,6 +241,20 @@ function ComparePanel({
 
                     <SelectGroup
                         num={2}
+                        labelTxt="Select Device"
+                        value={device}
+                        disabled={!url}
+                        onChange={(val: string) =>
+                            updateUrlParams(`${paramPrefix}_device`, val, [`${paramPrefix}_date`, `${paramPrefix}_hour`])
+                        }
+                    >
+                        <option value="">Select Device</option>
+                        <option value="desktop">Desktop</option>
+                        <option value="mobile">Mobile</option>
+                    </SelectGroup>
+
+                    <SelectGroup
+                        num={3}
                         labelTxt="Select Date"
                         value={date}
                         disabled={!url}
@@ -253,7 +273,7 @@ function ComparePanel({
                     </SelectGroup>
 
                     <SelectGroup
-                        num={3}
+                        num={4}
                         labelTxt="Select Hour"
                         value={hour}
                         disabled={!date}
