@@ -1,5 +1,5 @@
 {
-  "name": "kioskz",
+  "name": "kiosk24",
   "version": "1.0.0",
   "scripts": {
     "format": "biome format --write .",

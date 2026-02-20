@@ -1,21 +1,11 @@
-```txt
-npm install
-npm run dev
-```
+# @kiosk24/api
 
-```txt
-npm run deploy
-```
+The backend API for the kiosk24 project, built with [Hono](https://hono.dev/) and running on Cloudflare Workers.
 
-[For generating/synchronizing types based on your Worker configuration run](https://developers.cloudflare.com/workers/wrangler/commands/#types):
 
-```txt
-npm run cf-typegen
-```
+## Features
 
-Pass the `CloudflareBindings` as generics when instantiation `Hono`:
-
-```ts
-// src/index.ts
-const app = new Hono<{ Bindings: CloudflareBindings }>()
-```
+- **RESTful API**
+- **Drizzle ORM**
+- **Bearer Authentication**
+- **Cloudflare Integration**
