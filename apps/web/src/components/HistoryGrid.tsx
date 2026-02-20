@@ -108,7 +108,6 @@ function HistoryGridInner({ date, device, cdn }: BaseProps) {
                             <button
                                 type="button"
                                 onClick={() => toggleExpansion(url)}
-                                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggleExpansion(url))}
                                 aria-expanded={isExpanded}
                                 aria-controls={panelId}
                                 className="w-full group flex flex-wrap items-center justify-between gap-4 p-4 bg-gray-50/50 cursor-pointer hover:bg-gray-100/80 transition-colors text-left"
@@ -152,7 +151,6 @@ function HistoryGridInner({ date, device, cdn }: BaseProps) {
 }
 
 function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
-    const [mounted, setMounted] = useState(false);
     const isDesktop = device === "desktop";
     const slideWidth = isDesktop ? "w-72" : "w-40";
     const aspectRatio = isDesktop ? "aspect-[16/10]" : "aspect-[9/16]";
@@ -171,10 +169,6 @@ function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
     const [prevDisabled, setPrevDisabled] = useState(true);
     const [nextDisabled, setNextDisabled] = useState(true);
 
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
     const onSelect = useCallback((api: EmblaCarouselType) => {
         setPrevDisabled(!api.canScrollPrev());
         setNextDisabled(!api.canScrollNext());
@@ -186,7 +180,7 @@ function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
         emblaApi.on("select", onSelect).on("reInit", onSelect);
     }, [emblaApi, onSelect]);
 
-    if (!mounted || isLoading) {
+    if (isLoading) {
         return (
             <div className="flex gap-4 overflow-hidden py-2">
                 {[1, 2, 3].map(i => (
