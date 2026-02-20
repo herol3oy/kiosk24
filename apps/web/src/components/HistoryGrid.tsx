@@ -41,6 +41,7 @@ const StatusMessage = ({ isError, children }: { isError?: boolean; children: Com
 
 const CarouselButton = ({ onClick, disabled, label, icon }: CarouselButtonProps) => (
     <button
+        type="button"
         onClick={onClick}
         disabled={disabled}
         aria-label={label}
@@ -53,6 +54,22 @@ const CarouselButton = ({ onClick, disabled, label, icon }: CarouselButtonProps)
 const dateFormatter = new Intl.DateTimeFormat([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
 export default function HistoryGridWrapper(props: BaseProps) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) {
+        return (
+            <div className="w-full p-4 space-y-6 pb-20 max-w-5xl mx-auto">
+                {[1, 2, 3].map(i => (
+                    <div key={i} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden h-32 animate-pulse" />
+                ))}
+            </div>
+        );
+    }
+
     return (
         <QueryClientProvider client={queryClient}>
             <HistoryGridInner {...props} />
@@ -81,41 +98,52 @@ function HistoryGridInner({ date, device, cdn }: BaseProps) {
     return (
         <div className="w-full p-4 space-y-6 pb-20 max-w-5xl mx-auto">
             {urls.map(({ id, url }) => {
-                const isExpanded = expandedUrls.includes(url);
                 const { cleanHost, favicon } = getUrlMeta(url);
                 const panelId = `panel-${cleanHost.replace(/[^a-zA-Z0-9]/g, '-')}`;
+                const isExpanded = expandedUrls.includes(url);
 
                 return (
                     <article key={id} className="bg-white rounded-xl border border-gray-200 shadow-sm transition-shadow hover:shadow-md overflow-hidden">
-                        <header
-                            className="group flex flex-wrap items-center justify-between gap-4 p-4 bg-gray-50/50 cursor-pointer hover:bg-gray-100/80 transition-colors"
-                            onClick={() => toggleExpansion(url)}
-                            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggleExpansion(url))}
-                            role="button"
-                            tabIndex={0}
-                            aria-expanded={isExpanded}
-                            aria-controls={panelId}
-                        >
-                            <div className="flex items-center gap-3">
-                                <img src={favicon} alt="" loading="lazy" className="h-6 w-6 rounded-sm bg-white p-0.5 shadow-sm" onError={e => (e.currentTarget.style.opacity = "0")} />
-                                <div className="flex items-center gap-1.5">
-                                    <h2 className="text-lg font-semibold text-gray-800 m-0 group-hover:text-blue-700 transition-colors">{cleanHost}</h2>
-                                    <a href={url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-600 p-1 transition-colors" aria-label={`Visit ${cleanHost}`} onClick={e => e.stopPropagation()}>
-                                        <span aria-hidden="true" className="text-sm font-bold">↗</span>
-                                    </a>
+                        <header className="border-b border-gray-100">
+                            <button
+                                type="button"
+                                onClick={() => toggleExpansion(url)}
+                                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), toggleExpansion(url))}
+                                aria-expanded={isExpanded}
+                                aria-controls={panelId}
+                                className="w-full group flex flex-wrap items-center justify-between gap-4 p-4 bg-gray-50/50 cursor-pointer hover:bg-gray-100/80 transition-colors text-left"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <img src={favicon} alt="" loading="lazy" className="h-6 w-6 rounded-sm bg-white p-0.5 shadow-sm" onError={e => (e.currentTarget.style.opacity = "0")} />
+                                    <div className="flex items-center gap-1.5">
+                                        <h2 className="text-lg font-semibold text-gray-800 m-0 group-hover:text-blue-700 transition-colors">{cleanHost}</h2>
+                                        <a
+                                            href={url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-gray-400 hover:text-blue-600 p-1 transition-colors inline-flex items-center"
+                                            onClick={e => e.stopPropagation()}
+                                        >
+                                            <span className="sr-only">Visit {cleanHost} website (opens in new tab)</span>
+                                            <span aria-hidden="true" className="text-sm font-bold">↗</span>
+                                        </a>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="text-sm font-medium text-gray-600">
-                                <span className="hidden sm:inline-block mr-2">{isExpanded ? "Hide" : "View"}</span>
-                                <span className="text-base text-gray-400" aria-hidden="true">{isExpanded ? "⯅" : "⯆"}</span>
-                            </div>
+                                <div className="text-sm font-medium text-gray-600">
+                                    <span className="hidden sm:inline-block mr-2">{isExpanded ? "Hide" : "View"} snapshots</span>
+                                    <span className="text-base text-gray-400" aria-hidden="true">{isExpanded ? "⯅" : "⯆"}</span>
+                                </div>
+                            </button>
                         </header>
 
-                        {isExpanded && (
-                            <div id={panelId} className="p-4 border-t border-gray-100 bg-white">
-                                <ScreenshotCarousel url={url} date={date} device={device} cdn={cdn} />
+                        <div
+                            id={panelId}
+                            className={`border-t border-gray-100 bg-white transition-all ${isExpanded ? 'block' : 'hidden'}`}
+                        >
+                            <div className="p-4">
+                                {isExpanded && <ScreenshotCarousel url={url} date={date} device={device} cdn={cdn} />}
                             </div>
-                        )}
+                        </div>
                     </article>
                 );
             })}
@@ -124,6 +152,7 @@ function HistoryGridInner({ date, device, cdn }: BaseProps) {
 }
 
 function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
+    const [mounted, setMounted] = useState(false);
     const isDesktop = device === "desktop";
     const slideWidth = isDesktop ? "w-72" : "w-40";
     const aspectRatio = isDesktop ? "aspect-[16/10]" : "aspect-[9/16]";
@@ -142,6 +171,10 @@ function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
     const [prevDisabled, setPrevDisabled] = useState(true);
     const [nextDisabled, setNextDisabled] = useState(true);
 
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     const onSelect = useCallback((api: EmblaCarouselType) => {
         setPrevDisabled(!api.canScrollPrev());
         setNextDisabled(!api.canScrollNext());
@@ -153,11 +186,15 @@ function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
         emblaApi.on("select", onSelect).on("reInit", onSelect);
     }, [emblaApi, onSelect]);
 
-    if (isLoading) return (
-        <div className="flex gap-4 overflow-hidden py-2">
-            {[1, 2, 3].map(i => <div key={i} className={`flex-none animate-pulse bg-gray-100 rounded-xl border border-gray-100 ${slideWidth} ${aspectRatio}`} />)}
-        </div>
-    );
+    if (!mounted || isLoading) {
+        return (
+            <div className="flex gap-4 overflow-hidden py-2">
+                {[1, 2, 3].map(i => (
+                    <div key={i} className={`flex-none animate-pulse bg-gray-100 rounded-xl border border-gray-100 ${slideWidth} ${aspectRatio}`} />
+                ))}
+            </div>
+        );
+    }
 
     if (isError) return <StatusMessage isError>Failed to load screenshots.</StatusMessage>;
     if (!group.length) return <StatusMessage>No snapshots found for this URL.</StatusMessage>;
@@ -175,11 +212,16 @@ function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
                                 <article className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow flex flex-col group">
                                     {item.job_status === "ok" ? (
                                         <a href={full} target="_blank" rel="noopener noreferrer" className={`relative bg-gray-50 block overflow-hidden ${aspectRatio}`}>
-                                            <img src={thumb} loading="lazy" className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105" alt={`Screenshot ${dateFormatted}`} />
+                                            <img
+                                                src={thumb}
+                                                loading="lazy"
+                                                className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                                                alt={`Screenshot ${dateFormatted}`}
+                                            />
                                         </a>
                                     ) : (
                                         <div className={`relative bg-red-50 flex flex-col items-center justify-center text-red-400 border-b border-red-100 ${aspectRatio}`}>
-                                            <span className="text-xl mb-1">⚠️</span>
+                                            <span className="text-xl mb-1" aria-hidden="true">⚠️</span>
                                             <span className="text-[10px] font-semibold uppercase tracking-wide">Failed</span>
                                         </div>
                                     )}
