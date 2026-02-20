@@ -43,6 +43,7 @@ export default function ScreenshotCarousel({ url, date, device, cdn }: Props) {
 
   const slideWidth = device === "desktop" ? "w-72" : "w-40";
   const aspectRatio = device === "desktop" ? "aspect-[16/10]" : "aspect-[9/16]";
+  const thumbWidth = device === "desktop" ? 400 : 240;
 
   if (isLoading) {
     return (
@@ -100,16 +101,17 @@ export default function ScreenshotCarousel({ url, date, device, cdn }: Props) {
 
                   {item.job_status === "ok" ? (
                     <a
-                      href={`${cdn}/${item.r2_key}`}
+                      href={`${cdn}/cdn-cgi/image/width=1600,quality=60,format=auto/${item.r2_key}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={`relative bg-gray-50 block overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500 ${aspectRatio}`}
                       aria-label={`View full screenshot from ${dateFormatted}`}
                     >
                       <img
-                        src={`${cdn}/${item.r2_key}`}
+                        src={`${cdn}/cdn-cgi/image/width=${thumbWidth},quality=50,fit=cover,format=auto/${item.r2_key}`}
                         loading="lazy"
                         decoding="async"
+                        fetchpriority="low"
                         className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
                         alt={`Screenshot taken on ${dateFormatted}`}
                       />
