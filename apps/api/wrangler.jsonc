@@ -1,47 +1,47 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "kiosk24-api",
-  "main": "src/index.ts",
-  "compatibility_date": "2026-02-07",
-  "routes": [
-    {
-      "pattern": "api.kiosk24.site",
-      "custom_domain": true
-    }
-  ],
-  // "compatibility_flags": [
-  //   "nodejs_compat"
-  // ],
-  // "vars": {
-  //   "MY_VAR": "my-variable"
-  // },
-  // "kv_namespaces": [
-  //   {
-  //     "binding": "MY_KV_NAMESPACE",
-  //     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  //   }
-  // ],
-  "r2_buckets": [
-    {
-      "binding": "R2_BUCKET",
-      "bucket_name": "kiosk24",
-      "preview_bucket_name": "kiosk24preview"
-    }
-  ],
-  "d1_databases": [
-    {
-      "binding": "D1",
-      "database_name": "kiosk24",
-      "database_id": "fe116b50-9091-4f37-93f5-f2fe03d73a90",
-      "migrations_dir": "drizzle"
-    }
-  ],
-  // ],
-  // "ai": {
-  //   "binding": "AI"
-  // },
-  // "observability": {
-  //   "enabled": true,
-  //   "head_sampling_rate": 1
-  // }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "kiosk24-api",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-02-07",
+	"routes": [
+		{
+			"pattern": "api.kiosk24.site",
+			"custom_domain": true
+		}
+	],
+	// "compatibility_flags": [
+	//   "nodejs_compat"
+	// ],
+	// "vars": {
+	//   "MY_VAR": "my-variable"
+	// },
+	// "kv_namespaces": [
+	//   {
+	//     "binding": "MY_KV_NAMESPACE",
+	//     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+	//   }
+	// ],
+	"r2_buckets": [
+		{
+			"binding": "R2_BUCKET",
+			"bucket_name": "kiosk24",
+			"preview_bucket_name": "kiosk24preview"
+		}
+	],
+	"d1_databases": [
+		{
+			"binding": "D1",
+			"database_name": "kiosk24",
+			"database_id": "d2244757-23a0-45d2-af2a-a18ddbbb6aad",
+			"migrations_dir": "drizzle"
+		}
+	],
+	// ],
+	// "ai": {
+	//   "binding": "AI"
+	// },
+	// "observability": {
+	//   "enabled": true,
+	//   "head_sampling_rate": 1
+	// }
 }
