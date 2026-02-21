@@ -10,7 +10,7 @@ export async function processSingleUrl(
     urlData: UrlEntry,
     timestampIso: string
 ) {
-    const { url, language } = urlData;
+    const { id: url_id, url, language } = urlData;
     const capturedAt = new Date().toISOString();
     const urlKey = getUrlKey(url);
 
@@ -35,8 +35,7 @@ export async function processSingleUrl(
             console.log(`[${new Date().toISOString()}] Sending ${url} [${deviceName}] to API`);
 
             uploadScreenshot(buffer, {
-                url,
-                language,
+                url_id,
                 objectKey,
                 deviceName,
                 capturedAt,
@@ -54,8 +53,7 @@ export async function processSingleUrl(
                 console.log(`[${new Date().toISOString()}] Reporting failure for ${url} [${deviceName}]`);
 
                 uploadScreenshot(null, {
-                    url,
-                    language,
+                    url_id,
                     objectKey: null,
                     deviceName,
                     capturedAt,

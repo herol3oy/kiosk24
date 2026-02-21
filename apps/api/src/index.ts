@@ -52,6 +52,11 @@ app.delete('/urls/:id', async (c) => {
   const db = drizzle(c.env.D1)
   const id = c.req.param('id')
 
+  await db
+    .delete(screenshotsTable)
+    .where(eq(screenshotsTable.url_id, id))
+    .run()
+
   const result = await db
     .delete(urlsTable)
     .where(eq(urlsTable.id, id))
@@ -74,7 +79,7 @@ app.get('/screenshots', async (c) => {
   const filters = [];
 
   if (urlParam) {
-    filters.push(eq(screenshotsTable.url, urlParam));
+    filters.push(eq(urlsTable.url, urlParam));
   }
 
   if (dateParam) {
@@ -86,8 +91,18 @@ app.get('/screenshots', async (c) => {
   }
 
   const results = await db
-    .select()
+    .select({
+      id: screenshotsTable.id,
+      url_id: screenshotsTable.url_id,
+      url: urlsTable.url,
+      language: urlsTable.language,
+      device: screenshotsTable.device,
+      job_status: screenshotsTable.job_status,
+      r2_key: screenshotsTable.r2_key,
+      created_at: screenshotsTable.created_at,
+    })
     .from(screenshotsTable)
+    .innerJoin(urlsTable, eq(screenshotsTable.url_id, urlsTable.id))
     .where(filters.length > 0 ? and(...filters) : undefined)
     .orderBy(sql`${screenshotsTable.created_at} DESC`)
 
@@ -98,26 +113,23 @@ app.post('/screenshots', async (c) => {
   const db = drizzle(c.env.D1)
   const body = await c.req.json<{
     id?: string
-    url: string
-    language: string
+    url_id: string
     device: 'desktop' | 'mobile'
     job_status: 'ok' | 'failed'
-    r2_key: string
+    r2_key: string | null
     created_at: string
   }>()
 
   if (
-    !body?.url ||
-    !body?.language ||
+    !body?.url_id ||
     !body?.device ||
     !body?.job_status ||
-    !body?.r2_key ||
     !body?.created_at
   ) {
     return c.json(
       {
         error:
-          'url, language, device, job_status, r2_key, and created_at are required',
+          'url_id, device, job_status, and created_at are required',
       },
       400
     )
@@ -129,8 +141,7 @@ app.post('/screenshots', async (c) => {
     .insert(screenshotsTable)
     .values({
       id,
-      url: body.url,
-      language: body.language,
+      url_id: body.url_id,
       device: body.device,
       job_status: body.job_status,
       r2_key: body.r2_key,
@@ -141,8 +152,7 @@ app.post('/screenshots', async (c) => {
   return c.json(
     {
       id,
-      url: body.url,
-      language: body.language,
+      url_id: body.url_id,
       device: body.device,
       job_status: body.job_status,
       r2_key: body.r2_key,
@@ -161,16 +171,15 @@ app.post('/upload_to_r2_bucket', async (c) => {
   }
 
   const imageFile = body['image']
-  const url = body['url'] as string | undefined
-  const language = body['language'] as string | undefined
+  const url_id = body['url_id'] as string | undefined
   const objectKey = body['objectKey'] as string | undefined
   const deviceName = body['deviceName'] as string | undefined
   const jobStatus = (body['jobStatus'] as string) || 'ok'
   const capturedAt = body['capturedAt'] as string | undefined
 
-  if (!url || !language || !deviceName || !capturedAt) {
+  if (!url_id || !deviceName || !capturedAt) {
     return c.json(
-      { error: 'url, language, deviceName, and capturedAt are required' },
+      { error: 'url_id, deviceName, and capturedAt are required' },
       400
     )
   }
@@ -205,8 +214,7 @@ app.post('/upload_to_r2_bucket', async (c) => {
       .insert(screenshotsTable)
       .values({
         id: crypto.randomUUID(),
-        url,
-        language,
+        url_id,
         device: deviceName as 'desktop' | 'mobile',
         job_status: jobStatus as 'ok' | 'failed',
         r2_key: objectKey || null, 
@@ -229,36 +237,41 @@ app.get('/latest', async (c) => {
 
   const latestSubquery = db
     .select({
-      url: screenshotsTable.url,
-      language: screenshotsTable.language,
+      url_id: screenshotsTable.url_id,
       device: screenshotsTable.device,
       maxCreatedAt: sql<string>`MAX(${screenshotsTable.created_at})`.as('max_created_at'),
     })
     .from(screenshotsTable)
     .where(eq(screenshotsTable.device, deviceType))
     .groupBy(
-      screenshotsTable.url,
-      screenshotsTable.language,
+      screenshotsTable.url_id,
       screenshotsTable.device
     )
     .as('sq')
 
   const results = await db
-    .select()
+    .select({
+      id: screenshotsTable.id,
+      url_id: screenshotsTable.url_id,
+      url: urlsTable.url,
+      language: urlsTable.language,
+      device: screenshotsTable.device,
+      job_status: screenshotsTable.job_status,
+      r2_key: screenshotsTable.r2_key,
+      created_at: screenshotsTable.created_at,
+    })
     .from(screenshotsTable)
+    .innerJoin(urlsTable, eq(screenshotsTable.url_id, urlsTable.id))
     .innerJoin(
       latestSubquery,
       and(
-        eq(screenshotsTable.url, latestSubquery.url),
-        eq(screenshotsTable.language, latestSubquery.language),
+        eq(screenshotsTable.url_id, latestSubquery.url_id),
         eq(screenshotsTable.device, latestSubquery.device),
         eq(screenshotsTable.created_at, latestSubquery.maxCreatedAt)
       )
     )
 
-  const cleanData = results.map((row) => row.screenshots_table)
-
-  return c.json(cleanData)
+  return c.json(results)
 })
 
 app.get('/languages', async (c) => {
@@ -266,9 +279,9 @@ app.get('/languages', async (c) => {
 
   try {
     const result = await db
-      .selectDistinct({ language: screenshotsTable.language })
-      .from(screenshotsTable)
-      .orderBy(screenshotsTable.language)
+      .selectDistinct({ language: urlsTable.language })
+      .from(urlsTable)
+      .orderBy(urlsTable.language)
 
     const languages = result.map((row) => row.language)
 
@@ -286,7 +299,7 @@ app.get('/available-dates', async (c) => {
     const filters = []
     
     if (urlParam) {
-      filters.push(eq(screenshotsTable.url, urlParam))
+      filters.push(eq(urlsTable.url, urlParam))
     }
 
     const results = await db
@@ -294,6 +307,7 @@ app.get('/available-dates', async (c) => {
         date: sql<string>`date(${screenshotsTable.created_at})`
       })
       .from(screenshotsTable)
+      .innerJoin(urlsTable, eq(screenshotsTable.url_id, urlsTable.id))
       .where(filters.length > 0 ? and(...filters) : undefined)
       .orderBy(desc(sql`date(${screenshotsTable.created_at})`))
 

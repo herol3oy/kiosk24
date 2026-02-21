@@ -1,7 +1,14 @@
 import { devices } from "playwright";
 
-export const VIEWPORTS = {
-    desktop: devices['Desktop Chrome'],
-    mobile: devices['iPhone 13'],
-};
+const desktop = devices["Desktop Chrome"];
 
+export const VIEWPORTS = {
+    desktop: {
+        ...desktop,
+        viewport: {
+            ...desktop.viewport,
+            height: 1080,
+        },
+    },
+    mobile: devices["iPhone 13"],
+};

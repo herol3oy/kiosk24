@@ -15,6 +15,13 @@
       "when": 1771270170909,
       "tag": "0001_dear_satana",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1771668573100,
+      "tag": "0002_amazing_crusher_hogan",
+      "breakpoints": true
     }
   ]
 }

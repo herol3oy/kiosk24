@@ -91,6 +91,7 @@ export function getJsCleanup(): string {
         .desktop-nav.desktop-sticky-nav,
         .fc-consent-root,
         .ad__container,
+        .qc-cmp-cleanslate,
         .qc-cmp2-container,
         .pub-container,
         .ad-stickyhero,

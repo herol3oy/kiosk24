@@ -10,10 +10,11 @@ export type UrlEntry = {
 
 export type ScreenshotEntry = {
     id: string
+    url_id: string
     url: string
     language: string
     device: DeviceType
     job_status: JobStatus
-    r2_key: string
+    r2_key: string | null
     created_at: string
 }

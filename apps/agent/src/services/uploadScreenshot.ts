@@ -3,8 +3,7 @@ import { ENV } from '../config/env';
 export async function uploadScreenshot(
     buffer: Buffer | null, 
     metadata: {
-        url: string;
-        language: string;
+        url_id: string;
         objectKey: string | null;
         deviceName: string;
         capturedAt: string;
@@ -18,8 +17,7 @@ export async function uploadScreenshot(
         formData.append('image', fileBlob, 'screenshot.jpg');
     }
 
-    formData.append('url', metadata.url);
-    formData.append('language', metadata.language);
+    formData.append('url_id', metadata.url_id);
     formData.append('objectKey', metadata.objectKey ?? ''); 
     formData.append('deviceName', metadata.deviceName);
     formData.append('capturedAt', metadata.capturedAt);
