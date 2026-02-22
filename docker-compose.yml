@@ -1,9 +1,7 @@
 services:
   agent:
     image: ghcr.io/herol3oy/kiosk24-agent:latest
-    build:
-      context: .
-      dockerfile: apps/agent/Dockerfile
+    pull_policy: always
     container_name: kiosk24-agent
     restart: "no"
     env_file:

@@ -10,12 +10,13 @@ COPY apps/agent/package.json ./apps/agent/
 
 RUN pnpm install --filter agent
 
-COPY apps/agent ./apps/agent
+WORKDIR /app/apps/agent
+RUN npx playwright install --with-deps chromium
 
+WORKDIR /app
+COPY apps/agent ./apps/agent
 RUN pnpm --filter agent run build
 
 WORKDIR /app/apps/agent
-
-RUN npx playwright install --with-deps chromium
 
 CMD ["node", "dist/index.js"]
