@@ -5,11 +5,13 @@ import type { ComponentChildren } from "preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
 import type { ScreenshotEntry, UrlEntry } from "../../../../libs/shared/src/types";
 import { queryClient } from "../libs/queryClient";
+import DatePicker from "./DatePicker";
 
 interface BaseProps { date: string; device: string; cdn: string; }
 interface CarouselProps extends BaseProps { url: string; }
 
 const dateFormatter = new Intl.DateTimeFormat([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+const languageNames = new Intl.DisplayNames(['en'], { type: 'language' });
 
 const getUrlMeta = (url: string) => ({
     cleanHost: new URL(url).hostname.replace(/^www\./, ""),
@@ -60,22 +62,65 @@ export default function HistoryGridWrapper(props: BaseProps) {
 }
 
 function HistoryGridInner({ date, device: initialDevice, cdn }: BaseProps) {
+    const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
+
     const { data: urls = [], isError } = useQuery({
         queryKey: ['urls', date, initialDevice],
         queryFn: async () => {
             const res = await fetch('/api/urls');
             if (!res.ok) throw new Error('Network response failed');
-            return res.json() as Promise<UrlEntry[]>;
+            const data = await res.json() as UrlEntry[];
+            return data.sort((a, b) => a.url.localeCompare(b.url));
         }
     });
 
     if (isError) return <div className="p-10 text-center"><StatusMessage isError>Failed to load history. Please refresh.</StatusMessage></div>;
 
+    const languages = Array.from(new Set(urls.map(u => u.language))).sort();
+    const filteredUrls = selectedLanguage 
+        ? urls.filter(u => u.language === selectedLanguage)
+        : urls;
+
     return (
         <div className="w-full p-4 space-y-6 pb-20 max-w-5xl mx-auto">
-            {urls.map(({ id, url }) => (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                {languages.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setSelectedLanguage(null)}
+                            className={`px-3 py-1 text-xs font-semibold rounded-full border transition-all ${!selectedLanguage 
+                                ? "bg-blue-600 border-blue-600 text-white shadow-sm" 
+                                : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"}`}
+                        >
+                            All
+                        </button>
+                        {languages.map(lang => (
+                            <button
+                                key={lang}
+                                type="button"
+                                onClick={() => setSelectedLanguage(lang)}
+                                className={`px-3 py-1 text-xs font-semibold rounded-full border transition-all ${selectedLanguage === lang 
+                                    ? "bg-blue-600 border-blue-600 text-white shadow-sm" 
+                                    : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"}`}
+                            >
+                                {languageNames.of(lang) || lang}
+                            </button>
+                        ))}
+                    </div>
+                )}
+                <div className="flex-shrink-0">
+                    <DatePicker initialDate={date} />
+                </div>
+            </div>
+            {filteredUrls.map(({ id, url }) => (
                 <UrlRow key={id} url={url} initialDevice={initialDevice} date={date} cdn={cdn} />
             ))}
+            {filteredUrls.length === 0 && urls.length > 0 && (
+                <div className="text-center py-10">
+                    <StatusMessage>No URLs found for the selected language.</StatusMessage>
+                </div>
+            )}
         </div>
     );
 }

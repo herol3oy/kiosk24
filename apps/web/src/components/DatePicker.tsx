@@ -45,10 +45,9 @@ function DatePickerInner({ initialDate }: Props) {
             disableMobile: true,
             onChange: (selectedDates, dateStr) => {
                 if (!dateStr || dateStr === initialDate) return;
-                
+
                 const currentUrl = new URL(window.location.href);
                 currentUrl.searchParams.set("date", dateStr);
-                // Use Astro's client-side router to navigate smoothly
                 navigate(currentUrl.toString());
             },
         });
@@ -64,15 +63,13 @@ function DatePickerInner({ initialDate }: Props) {
                 className="bg-gray-50 border border-gray-300 text-gray-700 text-xs rounded-md focus:ring-blue-500 focus:border-blue-500 block pl-8 p-1.5 w-32 cursor-pointer transition-colors hover:bg-white"
                 placeholder="Select Date"
             />
-            <svg
-                className="w-3 h-3 text-gray-500 absolute left-2.5 top-2 pointer-events-none"
+
+            <span
                 aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="currentColor"
-                viewBox="0 0 20 20"
+                className="absolute inset-y-0 left-2 flex items-center text-gray-500 text-sm leading-none pointer-events-none"
             >
-                <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z" />
-            </svg>
+                &#128466;
+            </span>
         </div>
     );
 }
