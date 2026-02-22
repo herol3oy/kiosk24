@@ -12,6 +12,6 @@ if (!API_BASE_URL) {
 export const ENV = {
     API_BASE_URL,
     URLS_ENDPOINT: `${API_BASE_URL}/urls`,
-    UPLOAD_ENDPOINT: `${API_BASE_URL}/upload_to_r2_bucket`,
+    UPLOAD_ENDPOINT: `${API_BASE_URL}/upload-screenshot`,
     API_KEY,
 };
