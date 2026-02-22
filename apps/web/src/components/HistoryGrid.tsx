@@ -73,7 +73,7 @@ function HistoryGridInner({ date, device: initialDevice, cdn }: BaseProps) {
         }
     });
 
-    const { data: urls = [], isError } = useQuery({
+    const { data: urls = [], isError: isErrorUrls, isLoading: isLoadingUrls } = useQuery({
         queryKey: ['urls', date, initialDevice],
         queryFn: async () => {
             const res = await fetch('/api/urls');
@@ -83,7 +83,17 @@ function HistoryGridInner({ date, device: initialDevice, cdn }: BaseProps) {
         }
     });
 
-    if (isError) return <div className="p-10 text-center"><StatusMessage isError>Failed to load history. Please refresh.</StatusMessage></div>;
+    if (isErrorUrls) return <div className="p-10 text-center"><StatusMessage isError>Failed to load history. Please refresh.</StatusMessage></div>;
+
+    const isLoading = isLoadingUrls;
+
+    if (isLoading) {
+        return (
+            <div className="w-full p-4 space-y-6 pb-20 max-w-5xl mx-auto">
+                {[1, 2, 3].map(i => <div key={i} className="bg-white rounded-xl border border-gray-200 h-32 animate-pulse" />)}
+            </div>
+        );
+    }
 
     const filteredUrls = selectedLanguages.length > 0
         ? urls.filter(u => selectedLanguages.includes(u.language))
@@ -144,9 +154,9 @@ function HistoryGridInner({ date, device: initialDevice, cdn }: BaseProps) {
                     <DatePicker initialDate={date} />
                 </div>
             </div>
-            {filteredUrls.map(({ id, url }) => (
-                <UrlRow key={id} url={url} initialDevice={initialDevice} date={date} cdn={cdn} />
-            ))}
+            {filteredUrls.map(({ id, url }) => {
+                return <UrlRow key={id} url={url} initialDevice={initialDevice} date={date} cdn={cdn} />;
+            })}
             {filteredUrls.length === 0 && urls.length > 0 && (
                 <div className="text-center py-10">
                     <StatusMessage>No URLs found for the selected language.</StatusMessage>
@@ -186,8 +196,8 @@ function UrlRow({ url, initialDevice, date, cdn }: { url: string, initialDevice:
                             </a>
                         </div>
                     </div>
-                    <div className="text-sm font-medium text-gray-600 flex items-center gap-2">
-                        <span className="hidden sm:inline-block">
+                    <div className="text-sm font-medium text-gray-600 flex items-center gap-4">
+                        <span className="hidden sm:inline-block border-l border-gray-200 pl-4">
                             <span className="group-open:hidden">View snapshots</span>
                             <span className="hidden group-open:inline">Hide snapshots</span>
                         </span>
@@ -197,32 +207,40 @@ function UrlRow({ url, initialDevice, date, cdn }: { url: string, initialDevice:
             </summary>
 
             <div className="border-t border-gray-100 bg-white p-4 space-y-4">
-                <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Device View</h3>
-                    <div className="flex bg-gray-100 p-1 rounded-lg border border-gray-200">
-                        <DeviceToggle type="desktop" label="Desktop" />
-                        <DeviceToggle type="mobile" label="Mobile" />
-                    </div>
-                </div>
-                <ScreenshotCarousel url={url} date={date} device={device} cdn={cdn} enabled={isOpen} />
+                {isOpen && (
+                    <>
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Device View</h3>
+                            <div className="flex bg-gray-100 p-1 rounded-lg border border-gray-200">
+                                <DeviceToggle type="desktop" label="Desktop" />
+                                <DeviceToggle type="mobile" label="Mobile" />
+                            </div>
+                        </div>
+                        <ScreenshotCarousel url={url} date={date} device={device} cdn={cdn} />
+                    </>
+                )}
             </div>
         </details>
     );
 }
 
-function ScreenshotCarousel({ url, date, device, cdn, enabled }: CarouselProps & { enabled: boolean }) {
+function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
     const isDesktop = device === "desktop";
-    const slideClasses = isDesktop ? "w-72 aspect-[16/10]" : "w-40 aspect-[9/16]";
 
-    const { data: group = [], isLoading, isError } = useQuery({
-        queryKey: ["screenshots", url, date, device],
+    const { data: screenshots = [], isLoading, isError } = useQuery({
+        queryKey: ['screenshots', url, date, device],
         queryFn: async () => {
             const res = await fetch(`/api/screenshots?url=${encodeURIComponent(url)}&date=${date}&device=${device}`);
-            if (!res.ok) throw new Error("Network error");
+            if (!res.ok) throw new Error('Failed to fetch screenshots');
             return await res.json() as ScreenshotEntry[];
         },
-        enabled
+        enabled: true
     });
+
+    const group = screenshots;
+    
+    const completedCount = group.filter(item => item.job_status === 'ok').length;
+    const failedCount = group.filter(item => item.job_status === 'failed').length;
 
     const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", containScroll: "trimSnaps" });
     const [prevDisabled, setPrevDisabled] = useState(true);
@@ -239,27 +257,20 @@ function ScreenshotCarousel({ url, date, device, cdn, enabled }: CarouselProps &
         emblaApi.on("select", onSelect).on("reInit", onSelect);
     }, [emblaApi, onSelect]);
 
-    if (isLoading) {
-        return (
-            <div className="flex gap-4 overflow-hidden py-2">
-                {[1, 2, 3].map(i => <div key={i} className={`flex-none animate-pulse bg-gray-100 rounded-xl border border-gray-100 ${slideClasses}`} />)}
-            </div>
-        );
-    }
-
-    if (isError) return <StatusMessage isError>Failed to load screenshots.</StatusMessage>;
-    if (!group.length) return <StatusMessage>No snapshots found for this URL.</StatusMessage>;
+    if (isLoading) return <div className="h-40 animate-pulse bg-gray-50 rounded-lg flex items-center justify-center text-gray-400 text-xs">Loading snapshots...</div>;
+    if (isError) return <StatusMessage isError>Failed to load snapshots for this device.</StatusMessage>;
+    if (!group.length) return <StatusMessage>No snapshots found for this device.</StatusMessage>;
 
     return (
         <section className="w-full py-2" aria-label="Screenshots">
             <div className="overflow-hidden w-full" ref={emblaRef}>
                 <div className="flex">
-                    {group.map((item, i) => {
+                    {group.map((item) => {
                         const dateFormatted = dateFormatter.format(new Date(item.created_at));
                         const { full, thumb } = buildImageUrls(cdn, item.r2_key, isDesktop ? 400 : 240);
 
                         return (
-                            <div key={item.id || i} className={`flex-[0_0_auto] pr-4 ${isDesktop ? "w-72" : "w-40"}`}>
+                            <div key={item.id} className={`flex-[0_0_auto] pr-4 ${isDesktop ? "w-72" : "w-40"}`}>
                                 <article className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow flex flex-col group">
                                     {item.job_status === "ok" ? (
                                         <a href={full} target="_blank" rel="noopener noreferrer" className={`relative bg-gray-50 block overflow-hidden ${isDesktop ? "aspect-16/10" : "aspect-9/16"}`}>
@@ -273,6 +284,10 @@ function ScreenshotCarousel({ url, date, device, cdn, enabled }: CarouselProps &
                                     )}
                                     <div className="px-3 py-2 bg-white flex justify-between items-center text-[10px] text-gray-500 font-mono">
                                         <time dateTime={item.created_at}>{dateFormatted}</time>
+                                        <div className="flex items-center gap-1">
+                                            <span className={`w-1.5 h-1.5 rounded-full ${item.job_status === 'ok' ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                            <span className={`font-bold uppercase ${item.job_status === 'ok' ? 'text-green-600' : 'text-red-600'}`}>{item.job_status}</span>
+                                        </div>
                                     </div>
                                 </article>
                             </div>
@@ -281,9 +296,22 @@ function ScreenshotCarousel({ url, date, device, cdn, enabled }: CarouselProps &
                 </div>
             </div>
 
-            <div className="flex gap-2 mt-4">
-                <CarouselButton onClick={() => emblaApi?.scrollPrev()} disabled={prevDisabled} label="Previous slide" icon="❮" />
-                <CarouselButton onClick={() => emblaApi?.scrollNext()} disabled={nextDisabled} label="Next slide" icon="❯" />
+            <div className="flex items-center justify-between mt-4">
+                <div className="flex gap-4 text-[10px] font-bold uppercase tracking-wider">
+                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-green-50 text-green-700 border border-green-100">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                        <span>Completed: {completedCount}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-red-50 text-red-700 border border-red-100">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                        <span>Failed: {failedCount}</span>
+                    </div>
+                </div>
+
+                <div className="flex gap-2">
+                    <CarouselButton onClick={() => emblaApi?.scrollPrev()} disabled={prevDisabled} label="Previous slide" icon="❮" />
+                    <CarouselButton onClick={() => emblaApi?.scrollNext()} disabled={nextDisabled} label="Next slide" icon="❯" />
+                </div>
             </div>
         </section>
     );
