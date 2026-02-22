@@ -1,4 +1,4 @@
-import { sqliteTable, text, index } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, index, integer } from 'drizzle-orm/sqlite-core'
 
 export const urlsTable = sqliteTable('urls_table', {
     id: text('id').primaryKey().notNull(),
@@ -18,3 +18,13 @@ export const screenshotsTable = sqliteTable('screenshots_table', {
     index('status_idx').on(t.job_status),
     index('created_at_idx').on(t.created_at)
 ])
+
+export const runsTable = sqliteTable('runs_table', {
+    id: text('id').primaryKey().notNull(),
+    total_screenshots: integer('total_screenshots').notNull(),
+    completed_screenshots: integer('completed_screenshots').notNull(),
+    failed_screenshots: integer('failed_screenshots').notNull(),
+    total_urls: integer('total_urls').notNull(),
+    started_at: text('started_at').notNull(),
+    completed_at: text('completed_at').notNull(),
+})

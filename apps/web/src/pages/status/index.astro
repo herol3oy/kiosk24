@@ -1,0 +1,118 @@
+---
+import Layout from "../../layouts/Layout.astro";
+
+interface StatusData {
+  total_screenshots: number;
+  completed_screenshots: number;
+  failed_screenshots: number;
+  total_urls: number;
+  job_start_timestamp: string;
+  job_completion_timestamp: string;
+}
+
+let data: StatusData[] | null = null;
+let error: string | null = null;
+
+try {
+  const env = Astro.locals.runtime.env;
+  const res = await env.API_WORKER.fetch("http://internal/status");
+  if (!res.ok) {
+    error = `Failed to fetch status: ${res.status}`;
+  } else {
+    data = await res.json();
+    if (data && data.length === 0) {
+      error = "No run metadata found";
+    }
+  }
+} catch (e) {
+  console.error(e);
+  error = "Proxy failed to fetch status data";
+}
+
+const formatDate = (isoString: string) => {
+  return new Date(isoString).toLocaleString();
+};
+
+const getDuration = (run: StatusData) => {
+  return (new Date(run.job_completion_timestamp).getTime() -
+      new Date(run.job_start_timestamp).getTime()) /
+    1000;
+};
+
+const getSuccessRate = (run: StatusData) => {
+  return Math.round((run.completed_screenshots / run.total_screenshots) * 100);
+};
+---
+
+<Layout title="System Status">
+  <div class="max-w-4xl mx-auto mt-10">
+    <h1 class="text-2xl font-bold mb-6 text-gray-900">Run History</h1>
+
+    {
+      error ? (
+        <div class="p-6 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <h2 class="text-lg font-semibold mb-2">Notice</h2>
+          <p>{error}</p>
+        </div>
+      ) : data ? (
+        <div class="space-y-8">
+            {data.map((run, index) => (
+            <div class="bg-white px-4 py-3 rounded-lg border border-gray-200 shadow-sm text-sm">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                
+                <div class="flex flex-col md:flex-row md:items-center gap-3 flex-1">
+                    <span class="text-gray-500 font-medium whitespace-nowrap">
+                    Run #{data.length - index}
+                    </span>
+
+                    <span class="text-gray-400 hidden md:inline">|</span>
+
+                    <span class="text-gray-600">
+                    {formatDate(run.job_start_timestamp)}
+                    </span>
+
+                    <span class="text-gray-400 hidden md:inline">|</span>
+
+                    <span class="text-gray-600">
+                    {getDuration(run).toFixed(1)}s
+                    </span>
+
+                    <span class="text-gray-400 hidden md:inline">|</span>
+
+                    <span class="text-gray-600">
+                    URLs: {run.total_urls}
+                    </span>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <span class="text-gray-700">
+                    {run.total_screenshots} total
+                    </span>
+
+                    <span class="text-green-600 font-semibold">
+                    ✓ {run.completed_screenshots}
+                    </span>
+
+                    <span class="text-red-600 font-semibold">
+                    ✕ {run.failed_screenshots}
+                    </span>
+
+                    <span class="font-bold text-gray-800">
+                    {getSuccessRate(run)}%
+                    </span>
+                </div>
+                </div>
+
+                <div class="mt-2 w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                <div
+                    class="bg-green-500 h-1.5 transition-all duration-500"
+                    style={`width: ${getSuccessRate(run)}%`}
+                />
+                </div>
+            </div>
+            ))}
+        </div>
+      ) : null
+    }
+  </div>
+</Layout>

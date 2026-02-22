@@ -18,3 +18,15 @@ export type ScreenshotEntry = {
     r2_key: string | null
     created_at: string
 }
+
+export type RunMetadata = {
+    successful_urls: number
+    failed_urls: number
+    duration_seconds: number
+    total_screenshots: number
+    completed_screenshots: number
+    failed_screenshots: number
+    total_urls: number
+    started_at: string
+    completed_at: string
+}

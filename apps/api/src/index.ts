@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { drizzle } from 'drizzle-orm/d1'
-import { screenshotsTable, urlsTable } from './db/schema'
+import { screenshotsTable, urlsTable, runsTable } from './db/schema'
 import { bearerAuth } from 'hono/bearer-auth'
 import { eq, and, sql, desc } from 'drizzle-orm'
 
@@ -318,6 +318,63 @@ app.get('/available-dates', async (c) => {
     console.error('Failed to fetch dates:', error)
     return c.json({ error: 'Failed to fetch available dates' }, 500)
   }
+})
+
+app.get('/status', async (c) => {
+  const db = drizzle(c.env.D1)
+  const runs = await db
+    .select()
+    .from(runsTable)
+    .orderBy(desc(runsTable.completed_at))
+    .all()
+
+  return c.json(runs.map(run => ({
+    total_screenshots: run.total_screenshots,
+    completed_screenshots: run.completed_screenshots,
+    failed_screenshots: run.failed_screenshots,
+    total_urls: run.total_urls,
+    job_start_timestamp: run.started_at,
+    job_completion_timestamp: run.completed_at,
+  })))
+})
+
+app.post('/runs', async (c) => {
+  const db = drizzle(c.env.D1)
+  const body = await c.req.json<{
+    total_screenshots: number
+    completed_screenshots: number
+    failed_screenshots: number
+    total_urls: number
+    started_at: string
+    completed_at: string
+  }>()
+
+  if (
+    body.total_screenshots === undefined ||
+    body.completed_screenshots === undefined ||
+    body.failed_screenshots === undefined ||
+    body.total_urls === undefined ||
+    !body.started_at ||
+    !body.completed_at
+  ) {
+    return c.json({ error: 'Missing required run metadata' }, 400)
+  }
+
+  const id = crypto.randomUUID()
+  await db
+    .insert(runsTable)
+    .values({
+      id,
+      total_screenshots: body.total_screenshots,
+      completed_screenshots: body.completed_screenshots,
+      failed_screenshots: body.failed_screenshots,
+      total_urls: body.total_urls,
+      started_at: body.started_at,
+      completed_at: body.completed_at,
+    })
+    .run()
+
+  return c.json({ success: true, id }, 201)
 })
 
 app.get('/:key{.+$}', async (c) => {
