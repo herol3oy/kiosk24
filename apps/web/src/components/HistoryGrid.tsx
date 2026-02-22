@@ -64,6 +64,15 @@ export default function HistoryGridWrapper(props: BaseProps) {
 function HistoryGridInner({ date, device: initialDevice, cdn }: BaseProps) {
     const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
 
+    const { data: languages = [] } = useQuery({
+        queryKey: ['languages'],
+        queryFn: async () => {
+            const res = await fetch('/api/languages');
+            if (!res.ok) throw new Error('Failed to fetch languages');
+            return await res.json() as string[];
+        }
+    });
+
     const { data: urls = [], isError } = useQuery({
         queryKey: ['urls', date, initialDevice],
         queryFn: async () => {
@@ -76,7 +85,6 @@ function HistoryGridInner({ date, device: initialDevice, cdn }: BaseProps) {
 
     if (isError) return <div className="p-10 text-center"><StatusMessage isError>Failed to load history. Please refresh.</StatusMessage></div>;
 
-    const languages = [...new Set(urls)].sort();
     const filteredUrls = selectedLanguages.length > 0
         ? urls.filter(u => selectedLanguages.includes(u.language))
         : urls;
@@ -102,30 +110,30 @@ function HistoryGridInner({ date, device: initialDevice, cdn }: BaseProps) {
                         </div>
                         <div className="h-6 w-px bg-gray-200 mx-1 hidden sm:block"></div>
                         {languages.map(lang => {
-                            const isSelected = selectedLanguages.includes(lang.language);
+                            const isSelected = selectedLanguages.includes(lang);
                             return (
-                                <div key={lang.id} className="flex items-center gap-2 group cursor-pointer">
+                                <div key={lang} className="flex items-center gap-2 group cursor-pointer">
                                     <div className="relative flex items-center">
                                         <input
                                             type="checkbox"
-                                            id={lang.id}
+                                            id={lang}
                                             name="languages"
                                             checked={isSelected}
                                             onChange={() => {
                                                 setSelectedLanguages(prev =>
                                                     isSelected
-                                                        ? prev.filter(l => l !== lang.language)
-                                                        : [...prev, lang.language]
+                                                        ? prev.filter(l => l !== lang)
+                                                        : [...prev, lang]
                                                 );
                                             }}
                                             className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-colors cursor-pointer"
                                         />
                                     </div>
                                     <label
-                                        htmlFor={lang.id}
+                                        htmlFor={lang}
                                         className={`text-sm font-medium cursor-pointer transition-colors ${isSelected ? "text-blue-700" : "text-gray-600 group-hover:text-gray-900"}`}
                                     >
-                                        {languageNames.of(lang.language) || lang}
+                                        {languageNames.of(lang) || lang}
                                     </label>
                                 </div>
                             );
