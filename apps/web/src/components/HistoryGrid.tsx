@@ -62,7 +62,7 @@ export default function HistoryGridWrapper(props: BaseProps) {
 }
 
 function HistoryGridInner({ date, device: initialDevice, cdn }: BaseProps) {
-    const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
+    const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
 
     const { data: urls = [], isError } = useQuery({
         queryKey: ['urls', date, initialDevice],
@@ -76,40 +76,63 @@ function HistoryGridInner({ date, device: initialDevice, cdn }: BaseProps) {
 
     if (isError) return <div className="p-10 text-center"><StatusMessage isError>Failed to load history. Please refresh.</StatusMessage></div>;
 
-    const languages = Array.from(new Set(urls.map(u => u.language))).sort();
-    const filteredUrls = selectedLanguage 
-        ? urls.filter(u => u.language === selectedLanguage)
+    const languages = [...new Set(urls)].sort();
+    const filteredUrls = selectedLanguages.length > 0
+        ? urls.filter(u => selectedLanguages.includes(u.language))
         : urls;
 
     return (
         <div className="w-full p-4 space-y-6 pb-20 max-w-5xl mx-auto">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 mb-8">
                 {languages.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setSelectedLanguage(null)}
-                            className={`px-3 py-1 text-xs font-semibold rounded-full border transition-all ${!selectedLanguage 
-                                ? "bg-blue-600 border-blue-600 text-white shadow-sm" 
-                                : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"}`}
-                        >
-                            All
-                        </button>
-                        {languages.map(lang => (
+                    <fieldset className="flex flex-wrap gap-4 items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <legend className="px-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            Filter by Language
+                        </legend>
+                        <div className="flex items-center">
                             <button
-                                key={lang}
                                 type="button"
-                                onClick={() => setSelectedLanguage(lang)}
-                                className={`px-3 py-1 text-xs font-semibold rounded-full border transition-all ${selectedLanguage === lang 
-                                    ? "bg-blue-600 border-blue-600 text-white shadow-sm" 
-                                    : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"}`}
+                                onClick={() => setSelectedLanguages([])}
+                                className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${selectedLanguages.length === 0
+                                    ? "bg-blue-600 border-blue-600 text-white shadow-sm"
+                                    : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"}`}
                             >
-                                {languageNames.of(lang) || lang}
+                                All
                             </button>
-                        ))}
-                    </div>
+                        </div>
+                        <div className="h-6 w-px bg-gray-200 mx-1 hidden sm:block"></div>
+                        {languages.map(lang => {
+                            const isSelected = selectedLanguages.includes(lang.language);
+                            return (
+                                <div key={lang.id} className="flex items-center gap-2 group cursor-pointer">
+                                    <div className="relative flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            id={lang.id}
+                                            name="languages"
+                                            checked={isSelected}
+                                            onChange={() => {
+                                                setSelectedLanguages(prev =>
+                                                    isSelected
+                                                        ? prev.filter(l => l !== lang.language)
+                                                        : [...prev, lang.language]
+                                                );
+                                            }}
+                                            className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-colors cursor-pointer"
+                                        />
+                                    </div>
+                                    <label
+                                        htmlFor={lang.id}
+                                        className={`text-sm font-medium cursor-pointer transition-colors ${isSelected ? "text-blue-700" : "text-gray-600 group-hover:text-gray-900"}`}
+                                    >
+                                        {languageNames.of(lang.language) || lang}
+                                    </label>
+                                </div>
+                            );
+                        })}
+                    </fieldset>
                 )}
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                     <DatePicker initialDate={date} />
                 </div>
             </div>
@@ -127,6 +150,7 @@ function HistoryGridInner({ date, device: initialDevice, cdn }: BaseProps) {
 
 function UrlRow({ url, initialDevice, date, cdn }: { url: string, initialDevice: string, date: string, cdn: string }) {
     const [device, setDevice] = useState(initialDevice);
+    const [isOpen, setIsOpen] = useState(false);
     const { cleanHost, favicon } = getUrlMeta(url);
 
     const DeviceToggle = ({ type, label }: { type: string, label: string }) => (
@@ -139,7 +163,10 @@ function UrlRow({ url, initialDevice, date, cdn }: { url: string, initialDevice:
     );
 
     return (
-        <details className="group bg-white rounded-xl border border-gray-200 shadow-sm transition-shadow hover:shadow-md overflow-hidden open:shadow-md">
+        <details
+            className="group bg-white rounded-xl border border-gray-200 shadow-sm transition-shadow hover:shadow-md overflow-hidden open:shadow-md"
+            onToggle={(e) => setIsOpen(e.currentTarget.open)}
+        >
             <summary className="list-none cursor-pointer border-b border-gray-100">
                 <div className="w-full flex flex-wrap items-center justify-between gap-4 p-4 bg-gray-50/50 group-hover:bg-gray-100/80 transition-colors">
                     <div className="flex items-center gap-3">
@@ -169,23 +196,24 @@ function UrlRow({ url, initialDevice, date, cdn }: { url: string, initialDevice:
                         <DeviceToggle type="mobile" label="Mobile" />
                     </div>
                 </div>
-                <ScreenshotCarousel url={url} date={date} device={device} cdn={cdn} />
+                <ScreenshotCarousel url={url} date={date} device={device} cdn={cdn} enabled={isOpen} />
             </div>
         </details>
     );
 }
 
-function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
+function ScreenshotCarousel({ url, date, device, cdn, enabled }: CarouselProps & { enabled: boolean }) {
     const isDesktop = device === "desktop";
     const slideClasses = isDesktop ? "w-72 aspect-[16/10]" : "w-40 aspect-[9/16]";
-    
+
     const { data: group = [], isLoading, isError } = useQuery({
         queryKey: ["screenshots", url, date, device],
         queryFn: async () => {
             const res = await fetch(`/api/screenshots?url=${encodeURIComponent(url)}&date=${date}&device=${device}`);
             if (!res.ok) throw new Error("Network error");
-            return res.json() as Promise<ScreenshotEntry[]>;
+            return await res.json() as ScreenshotEntry[];
         },
+        enabled
     });
 
     const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", containScroll: "trimSnaps" });
