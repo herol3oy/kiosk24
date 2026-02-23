@@ -8,7 +8,11 @@ const deviceParam = Astro.url.searchParams.get("device");
 const dateParam = Astro.url.searchParams.get("date");
 
 const currentDevice = deviceParam === "mobile" ? "mobile" : "desktop";
-const today = new Date().toISOString().split("T")[0];
+
+const today = new Intl.DateTimeFormat('en-CA', { 
+    timeZone: 'Europe/Warsaw' 
+}).format(new Date());
+
 const currentDate = dateParam || today;
 ---
 

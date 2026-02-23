@@ -9,8 +9,12 @@ import { requestUrls } from "./services/requestUrls";
 import { generateTimestampKey } from "./utils/generateTimestampKey";
 
 async function takeScreenshots() {
-    const start = new Date();
-    console.log(`[${start.toISOString()}] Starting Batch Screenshot Job`);
+    const startPerf = performance.now();
+    const startTimestamp = new Date();
+    const batchTimestampIso = startTimestamp.toISOString();
+
+    console.log(`[${batchTimestampIso}] Starting Batch Screenshot Job`);
+    console.log(`[${startTimestamp.toISOString()}] Starting Batch Screenshot Job`);
 
     const urls = await requestUrls();
 
@@ -50,8 +54,7 @@ async function takeScreenshots() {
             console.log(`Processing ${index + 1}/${urls.length}: ${urlData.url}`);
 
             try {
-                const result = await processSingleUrl(contextsByDevice, urlData, tsIsoFileName);
-
+                const result = await processSingleUrl(contextsByDevice, urlData, tsIsoFileName, batchTimestampIso);
                 completedScreenshots += result.success ?? 0;
                 failedScreenshots += result.failed ?? 0;
 
@@ -84,10 +87,11 @@ async function takeScreenshots() {
         }
     }
 
-    const end = new Date();
-    const durationSeconds = (end.getTime() - start.getTime()) / 1000;
+    const endPerf = performance.now();
+    const endTimestamp = new Date();
+    const durationSeconds = (endPerf - startPerf) / 1000;
 
-    console.log(`[${end.toISOString()}] Batch Job Finished in ${durationSeconds}s`);
+    console.log(`[${endTimestamp.toISOString()}] Batch Job Finished in ${durationSeconds.toFixed(2)}s`);
 
     await reportRunMetadata({
         failed_screenshots: failedScreenshots,
@@ -97,8 +101,8 @@ async function takeScreenshots() {
         completed_screenshots: completedScreenshots,
         failed_urls: failedUrls,
         duration_seconds: durationSeconds,
-        started_at: start.toISOString(),
-        completed_at: end.toISOString(),
+        started_at: startTimestamp.toISOString(),
+        completed_at: endTimestamp.toISOString(),
     });
 }
 

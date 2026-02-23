@@ -8,10 +8,11 @@ import { uploadScreenshot } from '../services/uploadScreenshot';
 export async function processSingleUrl(
     contextsByDevice: Record<string, BrowserContext>,
     urlData: UrlEntry,
-    timestampIso: string
+    timestampIso: string,
+    batchTimestampIso: string
 ): Promise<{ success: number, failed: number }> {
     const { id: url_id, url, language } = urlData;
-    const capturedAt = new Date().toISOString();
+    const capturedAt = batchTimestampIso;
     const urlKey = getUrlKey(url);
 
     let successCount = 0;
