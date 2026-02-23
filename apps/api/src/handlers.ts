@@ -311,6 +311,7 @@ export const getStatus = async (c: Context<{ Bindings: Env }>) => {
     .select()
     .from(runsTable)
     .orderBy(desc(runsTable.completed_at))
+    .limit(100)
     .all()
 
   return c.json(runs.map(run => ({
