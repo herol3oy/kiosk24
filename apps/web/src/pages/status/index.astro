@@ -1,14 +1,12 @@
 ---
-import type { AppType } from "@kiosk24/api"; 
 import type { InferResponseType } from "hono/client";
-import { hc } from "hono/client";
 import Layout from "../../layouts/Layout.astro";
+
+import { getServerClient } from "../../libs/api-client";
 
 const env = Astro.locals.runtime.env;
 
-const client = hc<AppType>("http://internal", {
-  fetch: env.API_WORKER.fetch.bind(env.API_WORKER)
-});
+const client = getServerClient(env);
 
 type StatusData = InferResponseType<typeof client.status.$get>[0];
 
