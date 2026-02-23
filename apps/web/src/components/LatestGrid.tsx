@@ -1,4 +1,4 @@
-import type { ScreenshotEntry } from "../../../../libs/shared/src/types";
+import type { ScreenshotEntry } from "@kiosk24/shared";
 import { useQuery, QueryClientProvider } from '@tanstack/preact-query';
 import { queryClient } from '../libs/queryClient';
 import { useEffect, useState } from 'preact/hooks';

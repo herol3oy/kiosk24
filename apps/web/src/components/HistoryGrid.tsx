@@ -3,7 +3,7 @@ import type { EmblaCarouselType } from "embla-carousel";
 import useEmblaCarousel from "embla-carousel-react";
 import type { ComponentChildren } from "preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
-import type { ScreenshotEntry, UrlEntry } from "../../../../libs/shared/src/types";
+import type { ScreenshotEntry, UrlEntry } from "@kiosk24/shared";
 import { queryClient } from "../libs/queryClient";
 import DatePicker from "./DatePicker";
 

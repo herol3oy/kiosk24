@@ -1,4 +1,4 @@
-import type { RunMetadata } from '../../../../libs/shared/src/types';
+import type { RunMetadata } from '@kiosk24/shared';
 import { ENV } from '../config/env';
 
 export async function reportRunMetadata(metadata: RunMetadata) {

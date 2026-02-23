@@ -1,5 +1,5 @@
 import { BrowserContext, Page } from 'playwright';
-import type { UrlEntry } from '../../../../libs/shared/src/types';
+import type { UrlEntry } from '@kiosk24/shared';
 import { getJsCleanup } from '../utils/getJsCleanup';
 import { getUrlKey } from '../utils/getUrlKey';
 import { JPEG_QUALITY } from '../constants/jpeg-quality';

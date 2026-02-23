@@ -1,4 +1,4 @@
-import { UrlEntry } from '../../../../libs/shared/src/types';
+import { UrlEntry } from '@kiosk24/shared';
 import { ENV } from '../config/env';
 
 export async function requestUrls(): Promise<UrlEntry[]> {

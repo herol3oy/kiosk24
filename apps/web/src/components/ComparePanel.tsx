@@ -2,7 +2,7 @@ import { useQuery, QueryClientProvider } from "@tanstack/preact-query";
 import { queryClient } from "../libs/queryClient";
 import type { ComponentChildren } from "preact";
 import { useEffect, useState } from "preact/hooks";
-import type { UrlEntry } from "../../../../libs/shared/src/types";
+import type { UrlEntry } from "@kiosk24/shared";
 
 interface SelectGroupProps {
     num: number;
