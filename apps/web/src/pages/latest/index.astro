@@ -1,24 +1,140 @@
 ---
+import type { InferResponseType } from "hono/client";
 import Layout from "../../layouts/Layout.astro";
-import LatestGridWrapper from "../../components/LatestGrid";
+import { getServerClient } from "../../libs/api-client";
 
-const baseUrl = "/api";
+const env = Astro.locals.runtime.env;
+
+const client = getServerClient(env);
+
 const cdn = process.env.PUBLIC_CDN_URL || "http://localhost:8787";
 
 const deviceParam = Astro.url.searchParams.get("device");
-const currentDevice = deviceParam === "mobile" ? "mobile" : "desktop";
+const isDesktop = deviceParam !== "mobile"; 
+const thumbWidth = isDesktop ? 600 : 400;
+const gridClass = isDesktop
+  ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
+  : "grid-cols-2 md:grid-cols-3 lg:grid-cols-5";
+const aspectClass = isDesktop ? "aspect-16/10" : "aspect-9/16";
+
+type LatestScreenshotsData = InferResponseType<typeof client.latest.$get>;
+
+let data: LatestScreenshotsData | null = null;
+let error: string | null = null;
+
+try {
+  const res = await client.latest.$get({
+    query: {
+      device: isDesktop ? "desktop" : "mobile"
+    }
+  });
+  
+  if (!res.ok) {
+    error = `Failed to fetch latest screenshots: ${res.status}`;
+  } else {
+    data = await res.json();
+    if (data && data.length === 0) {
+      error = "No latest screenshots found.";
+    }
+  }
+} catch (e) {
+  console.error(e);
+  error = "Proxy failed to fetch latest data";
+}
+
+const buildImageUrls = (cdnUrl: string, key: string | null, width: number) => ({
+  full: cdnUrl.includes("localhost") 
+    ? `${cdnUrl}/${key}` 
+    : `${cdnUrl}/cdn-cgi/image/width=1600,quality=60,format=auto/${key}`,
+  thumb: cdnUrl.includes("localhost") 
+    ? `${cdnUrl}/${key}` 
+    : `${cdnUrl}/cdn-cgi/image/width=${width},quality=50,fit=cover,format=auto/${key}`,
+});
+
+const getHostname = (url: string) => {
+  try {
+    return new URL(url).hostname.replace("www.", "");
+  } catch {
+    return url;
+  }
+};
 ---
 
 <Layout title="Latest Screenshots">
-  <LatestGridWrapper
-    client:load
-    device={currentDevice}
-    baseUrl={baseUrl}
-    cdn={cdn}
-  >
-    <div slot="fallback" class="flex justify-center py-20">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600">
-      </div>
-    </div>
-  </LatestGridWrapper>
+  <div class="px-4 mt-10">
+    <h1 class="text-2xl font-bold mb-6 text-gray-900 max-w-7xl mx-auto">Latest Screenshots</h1>
+
+    {
+      error ? (
+        <div class="flex flex-col items-center justify-center py-32 text-red-400">
+          <span class="text-4xl mb-4" aria-hidden="true">⚠️</span>
+          <p class="text-lg">{error}</p>
+        </div>
+      ) : data ? (
+        <div class={`grid gap-6 max-w-7xl mx-auto ${gridClass}`}>
+          {data.map((item) => {
+            const hostname = getHostname(item.url);
+            const favicon = `https://www.google.com/s2/favicons?domain=${item.url}&sz=64`;
+            const isOk = item.job_status === 'ok';
+            const images = buildImageUrls(cdn, item.r2_key, thumbWidth);
+            const linkHref = isOk ? images.full : item.url;
+
+            return (
+              <article class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow flex flex-col">
+                <div class="px-3 py-2 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+                  <div class="flex items-center gap-2 overflow-hidden">
+                    <img src={favicon} alt="" loading="lazy" class="w-4 h-4 opacity-70" />
+                    <h3 class="text-xs font-bold text-gray-700 truncate" title={item.url}>{hostname}</h3>
+                  </div>
+                  <span class="text-[10px] font-mono text-gray-400 uppercase tracking-wider">
+                    {item.language}
+                  </span>
+                </div>
+
+                <div class={`relative bg-gray-100 border-b border-gray-100 group ${aspectClass}`}>
+                  {!isOk ? (
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-red-400">
+                      <span class="text-2xl mb-2" aria-hidden="true">⚠️</span>
+                      <span class="text-xs font-semibold uppercase tracking-wide">Failed</span>
+                    </div>
+                  ) : (
+                    <img
+                      src={images.thumb}
+                      srcset={isDesktop ? `${images.thumb} 1x, ${images.full} 2x` : undefined}
+                      alt={`Screenshot of ${hostname}`}
+                      loading="lazy"
+                      decoding="async"
+                      class="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                    />
+                  )}
+                  <a
+                    href={linkHref}
+                    target="_blank"
+                    rel="noreferrer"
+                    class="absolute inset-0 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    aria-label={`View ${isOk ? 'screenshot' : 'site'} of ${hostname} (opens in new tab)`}
+                  >
+                    <span class="sr-only">
+                      View {isOk ? 'screenshot' : 'site'} of {hostname}
+                    </span>
+                  </a>
+                </div>
+
+                <div class="px-3 py-2 bg-white flex justify-between items-center text-[10px] text-gray-400 font-mono">
+                  <time datetime={item.created_at}>
+                    {new Date(item.created_at).toLocaleString([], {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </time>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      ) : null
+    }
+  </div>
 </Layout>
