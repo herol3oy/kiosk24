@@ -1,21 +1,23 @@
 ---
+import type { AppType } from "@kiosk24/api"; 
+import type { InferResponseType } from "hono/client";
+import { hc } from "hono/client";
 import Layout from "../../layouts/Layout.astro";
 
-interface StatusData {
-  total_screenshots: number;
-  completed_screenshots: number;
-  failed_screenshots: number;
-  total_urls: number;
-  job_start_timestamp: string;
-  job_completion_timestamp: string;
-}
+const env = Astro.locals.runtime.env;
+
+const client = hc<AppType>("http://internal", {
+  fetch: env.API_WORKER.fetch.bind(env.API_WORKER)
+});
+
+type StatusData = InferResponseType<typeof client.status.$get>[0];
 
 let data: StatusData[] | null = null;
 let error: string | null = null;
 
 try {
-  const env = Astro.locals.runtime.env;
-  const res = await env.API_WORKER.fetch("http://internal/status");
+  const res = await client.status.$get();
+  
   if (!res.ok) {
     error = `Failed to fetch status: ${res.status}`;
   } else {

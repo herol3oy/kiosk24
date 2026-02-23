@@ -23,40 +23,44 @@ export interface Env {
 
 const app = new Hono<{ Bindings: Env }>()
 
-app.get('/', (c) => c.json({ status: 'ok', service: 'kiosk24' }))
+const routes = app
 
-app.on(['POST', 'PUT', 'DELETE', 'PATCH'], '*', async (c, next) => {
-  if (!c.env.API_KEY) {
-    return c.json({ error: 'Server misconfiguration: API_KEY is missing' }, 500)
-  }
-  const auth = bearerAuth({ token: c.env.API_KEY })
-  return auth(c, next)
-})
+  .get('/', (c) => c.json({ status: 'ok', service: 'kiosk24' }))
 
-app.get('/urls', ...getUrlsRoute)
-app.post('/urls', ...postUrlsRoute)
-app.delete('/urls/:id', ...deleteUrlRoute)
+  .on(['POST', 'PUT', 'DELETE', 'PATCH'], '*', async (c, next) => {
+    if (!c.env.API_KEY) {
+      return c.json({ error: 'Server misconfiguration: API_KEY is missing' }, 500)
+    }
+    const auth = bearerAuth({ token: c.env.API_KEY })
+    return auth(c, next)
+  })
 
-app.get('/screenshots', ...getScreenshotsRoute)
-app.post('/screenshots', ...postScreenshotsRoute)
-app.post('/upload-screenshot', ...uploadToR2Route)
+  .get('/urls', ...getUrlsRoute)
+  .post('/urls', ...postUrlsRoute)
+  .delete('/urls/:id', ...deleteUrlRoute)
 
-app.post('/runs', ...postRunsRoute)
+  .get('/screenshots', ...getScreenshotsRoute)
+  .post('/screenshots', ...postScreenshotsRoute)
+  .post('/upload-screenshot', ...uploadToR2Route)
 
-app.get('/latest', ...getLatestRoute)
-app.get('/available-dates', ...getAvailableDatesRoute)
-app.get('/languages', ...getLanguagesRoute)
-app.get('/status', ...getStatusRoute)
+  .post('/runs', ...postRunsRoute)
 
-app.get('/:key{.+$}', ...getImageRoute)
+  .get('/latest', ...getLatestRoute)
+  .get('/available-dates', ...getAvailableDatesRoute)
+  .get('/languages', ...getLanguagesRoute)
+  .get('/status', ...getStatusRoute)
 
-app.onError((err, c) => {
-  console.error(`[Error] ${err.message}`, err)
-  return c.json({ error: 'Internal Server Error' }, 500)
-})
+  .get('/:key{.+$}', ...getImageRoute)
 
-app.notFound((c) => {
-  return c.json({ error: 'Not Found' }, 404)
-})
+  .onError((err, c) => {
+    console.error(`[Error] ${err.message}`, err)
+    return c.json({ error: 'Internal Server Error' }, 500)
+  })
+
+  .notFound((c) => {
+    return c.json({ error: 'Not Found' }, 404)
+  })
+
+export type AppType = typeof routes;
 
 export default app
