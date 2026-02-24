@@ -1,52 +1,47 @@
-import type { APIRoute } from 'astro'
 import { API_KEY } from "astro:env/server";
-
+import type { APIRoute } from "astro";
 
 export const GET: APIRoute = async ({ locals }) => {
-  try {
-    const env = locals.runtime.env;
+	try {
+		const env = locals.runtime.env;
 
-    const res = await env.API_WORKER.fetch('http://internal/urls');
+		const res = await env.API_WORKER.fetch("http://internal/urls");
 
-    const data = await res.json();
+		const data = await res.json();
 
-    return new Response(JSON.stringify(data), {
-      status: res.status,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } catch {
-    return new Response(
-      JSON.stringify({ error: 'Proxy failed' }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  }
+		return new Response(JSON.stringify(data), {
+			status: res.status,
+			headers: { "Content-Type": "application/json" },
+		});
+	} catch {
+		return new Response(JSON.stringify({ error: "Proxy failed" }), {
+			status: 500,
+			headers: { "Content-Type": "application/json" },
+		});
+	}
 };
 
-
 export const POST: APIRoute = async ({ request, locals }) => {
-  try {
-    const env = locals.runtime.env;
-    
-    const res = await env.API_WORKER.fetch('http://internal/urls', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`
-      },
-      body: await request.text(),
-    })
+	try {
+		const env = locals.runtime.env;
 
-    return new Response(await res.text(), {
-      status: res.status,
-      headers: { 'Content-Type': 'application/json' },
-    })
-  } catch {
-    return new Response(JSON.stringify({ error: 'Proxy failed' }), { 
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
-  }
-}
+		const res = await env.API_WORKER.fetch("http://internal/urls", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${API_KEY}`,
+			},
+			body: await request.text(),
+		});
+
+		return new Response(await res.text(), {
+			status: res.status,
+			headers: { "Content-Type": "application/json" },
+		});
+	} catch {
+		return new Response(JSON.stringify({ error: "Proxy failed" }), {
+			status: 500,
+			headers: { "Content-Type": "application/json" },
+		});
+	}
+};

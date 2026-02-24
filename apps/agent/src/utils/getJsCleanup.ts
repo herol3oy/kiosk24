@@ -1,5 +1,5 @@
 export function getJsCleanup(): string {
-    return `
+	return `
     document.body.classList.remove("didomi-popup-open")
     document.body.classList.remove("smartbanner-visible")
 

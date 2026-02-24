@@ -1,8 +1,8 @@
 ---
+import { PUBLIC_CDN_URL } from "astro:env/server";
 import type { InferResponseType } from "hono/client";
 import Layout from "../../layouts/Layout.astro";
 import { getServerClient } from "../../libs/api-client";
-import { PUBLIC_CDN_URL } from "astro:env/server";
 
 const env = Astro.locals.runtime.env;
 

@@ -1,20 +1,20 @@
 {
-  "name": "kiosk24",
-  "version": "1.0.0",
-  "scripts": {
-    "format": "biome format --write .",
-    "lint": "biome lint .",
-    "check": "biome check --write ."
-  },
-  "description": "",
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.30.2",
-  "devDependencies": {
-    "@biomejs/biome": "2.4.3"
-  },
-  "engines": {
-    "node": ">=25.6.1"
-  }
+	"name": "kiosk24",
+	"version": "1.0.0",
+	"scripts": {
+		"format": "biome format --write .",
+		"lint": "biome lint .",
+		"check": "biome check --write ."
+	},
+	"description": "",
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"packageManager": "pnpm@10.30.2",
+	"devDependencies": {
+		"@biomejs/biome": "2.4.3"
+	},
+	"engines": {
+		"node": ">=25.6.1"
+	}
 }
