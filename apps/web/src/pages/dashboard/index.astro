@@ -1,10 +1,231 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import Dashboard from "../../components/Dashboard";
+import { getServerClient } from "../../libs/api-client";
+import type { InferResponseType } from "hono/client";
 
 export const prerender = false;
+
+const env = Astro.locals.runtime.env;
+const client = getServerClient(env);
+let fetchError: string | null = null;
+
+const token = env.API_KEY;
+const authHeaders = {
+    Authorization: `Bearer ${token}`,
+};
+
+if (Astro.request.method === "POST") {
+    try {
+        const formData = await Astro.request.formData();
+        const action = formData.get("action");
+
+        if (action === "add") {
+            const res = await client.urls.$post(
+                {
+                    json: {
+                        url: formData.get("url") as string,
+                        language: formData.get("language") as string,
+                    },
+                },
+                {
+                    headers: authHeaders,
+                },
+            );
+
+            if (!res.ok) {
+                const errorData = await res.text();
+                fetchError = `Failed to add URL: ${res.status} - ${errorData}`;
+            }
+        } else if (action === "delete") {
+            const id = formData.get("id") as string;
+
+            const res = await client.urls[":id"].$delete(
+                {
+                    param: { id },
+                },
+                {
+                    headers: authHeaders,
+                },
+            );
+
+            if (!res.ok) {
+                const errorData = await res.text();
+                fetchError = `Failed to delete URL: ${res.status} - ${errorData}`;
+            }
+        }
+    } catch (e) {
+        console.error("Form submission error:", e);
+        fetchError = "An unexpected error occurred while submitting the form.";
+    }
+}
+
+type UrlEntry = InferResponseType<typeof client.urls.$get>[0];
+let urls: UrlEntry[] = [];
+
+try {
+    const res = await client.urls.$get(
+        {},
+        {
+            headers: authHeaders,
+        },
+    );
+
+    if (res.ok) {
+        urls = await res.json();
+    } else {
+        const errText = await res.text();
+        fetchError =
+            fetchError || `Failed to fetch URLs: ${res.status} - ${errText}`;
+    }
+} catch (e) {
+    console.error("Fetch URLs error:", e);
+    fetchError = fetchError || "Proxy failed to fetch URLs.";
+}
 ---
 
 <Layout title="Dashboard - Kiosk24">
-    <Dashboard client:load />
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        {
+            fetchError && (
+                <div class="p-4 bg-red-50 text-red-700 rounded-lg border border-red-200 mb-8">
+                    {fetchError}
+                </div>
+            )
+        }
+
+        <div
+            class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8"
+        >
+            <div class="p-6 border-b border-gray-100 bg-gray-50/50">
+                <h2 class="text-base font-semibold text-gray-900">
+                    Add New URL
+                </h2>
+            </div>
+            <div class="p-6">
+                <form method="POST" class="flex flex-col sm:flex-row gap-4">
+                    <input type="hidden" name="action" value="add" />
+
+                    <div class="grow">
+                        <input
+                            type="url"
+                            name="url"
+                            placeholder="https://example.com"
+                            required
+                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-4 py-2.5 border"
+                        />
+                    </div>
+                    <div class="w-full sm:w-32">
+                        <input
+                            type="text"
+                            name="language"
+                            placeholder="Lang (fa, en)"
+                            required
+                            maxlength="5"
+                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-4 py-2.5 border"
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        class="inline-flex justify-center items-center px-6 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                    >
+                        Add
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div
+            class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+        >
+            <div
+                class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/50"
+            >
+                <h3 class="text-base font-semibold text-gray-900">
+                    Monitored URLs
+                </h3>
+                <span
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                >
+                    {urls.length} items
+                </span>
+            </div>
+
+            <ul class="divide-y divide-gray-200">
+                {
+                    urls.length === 0 && (
+                        <li class="p-12 text-center text-gray-400 text-sm">
+                            No URLs found. Add one above.
+                        </li>
+                    )
+                }
+
+                {
+                    urls.map((item) => {
+                        let hostname = item.url;
+                        try {
+                            hostname = new URL(item.url).hostname;
+                        } catch {}
+                        const favicon = `https://www.google.com/s2/favicons?domain=${item.url}&sz=32`;
+
+                        return (
+                            <li class="hover:bg-gray-50 transition-all duration-150">
+                                <div class="px-6 py-4 flex items-center justify-between">
+                                    <div class="flex items-center min-w-0 gap-4">
+                                        <img
+                                            src={favicon}
+                                            alt=""
+                                            class="h-8 w-8 rounded bg-gray-100 p-0.5"
+                                        />
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-medium text-blue-600 truncate">
+                                                <a
+                                                    href={item.url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    class="hover:underline"
+                                                >
+                                                    {hostname}
+                                                </a>
+                                            </p>
+                                            <p class="text-xs text-gray-500 truncate">
+                                                {item.url}
+                                            </p>
+                                        </div>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 uppercase tracking-wide border border-gray-200">
+                                            {item.language}
+                                        </span>
+                                    </div>
+
+                                    <form
+                                        method="POST"
+                                        class="m-0 flex items-center"
+                                    >
+                                        <input
+                                            type="hidden"
+                                            name="action"
+                                            value="delete"
+                                        />
+                                        <input
+                                            type="hidden"
+                                            name="id"
+                                            value={item.id}
+                                        />
+
+                                        <button
+                                            type="submit"
+                                            class="text-gray-400 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-all text-xl leading-none"
+                                            title="Delete"
+                                            onclick="return confirm('Are you sure you want to delete this URL?')"
+                                        >
+                                            &#128465;
+                                        </button>
+                                    </form>
+                                </div>
+                            </li>
+                        );
+                    })
+                }
+            </ul>
+        </div>
+    </div>
 </Layout>
