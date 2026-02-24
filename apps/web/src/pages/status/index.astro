@@ -15,7 +15,7 @@ let error: string | null = null;
 
 try {
   const res = await client.status.$get();
-  
+
   if (!res.ok) {
     error = `Failed to fetch status: ${res.status}`;
   } else {
@@ -34,9 +34,11 @@ const formatDate = (isoString: string) => {
 };
 
 const getDuration = (run: StatusData) => {
-  return (new Date(run.job_completion_timestamp).getTime() -
+  return (
+    (new Date(run.job_completion_timestamp).getTime() -
       new Date(run.job_start_timestamp).getTime()) /
-    1000;
+    1000
+  );
 };
 
 const getSuccessRate = (run: StatusData) => {
@@ -45,74 +47,117 @@ const getSuccessRate = (run: StatusData) => {
 ---
 
 <Layout title="System Status">
-  <div class="max-w-4xl mx-auto mt-10">
-    <h1 class="text-2xl font-bold mb-6 text-gray-900">Run History</h1>
-
-    {
-      error ? (
-        <div class="p-6 bg-red-50 border border-red-200 rounded-lg text-red-700">
-          <h2 class="text-lg font-semibold mb-2">Notice</h2>
-          <p>{error}</p>
-        </div>
-      ) : data ? (
-        <div class="space-y-8">
-            {data.map((run, index) => (
-            <div class="bg-white px-4 py-3 rounded-lg border border-gray-200 shadow-sm text-sm">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                
-                <div class="flex flex-col md:flex-row md:items-center gap-3 flex-1">
-                    <span class="text-gray-500 font-medium whitespace-nowrap">
-                    Run #{data.length - index}
-                    </span>
-
-                    <span class="text-gray-400 hidden md:inline">|</span>
-
-                    <span class="text-gray-600">
-                    {formatDate(run.job_start_timestamp)}
-                    </span>
-
-                    <span class="text-gray-400 hidden md:inline">|</span>
-
-                    <span class="text-gray-600">
-                    {getDuration(run).toFixed(1)}s
-                    </span>
-
-                    <span class="text-gray-400 hidden md:inline">|</span>
-
-                    <span class="text-gray-600">
-                    URLs: {run.total_urls}
-                    </span>
-                </div>
-
-                <div class="flex items-center gap-4">
-                    <span class="text-gray-700">
-                    {run.total_screenshots} total
-                    </span>
-
-                    <span class="text-green-600 font-semibold">
-                    ✓ {run.completed_screenshots}
-                    </span>
-
-                    <span class="text-red-600 font-semibold">
-                    ✕ {run.failed_screenshots}
-                    </span>
-
-                    <span class="font-bold text-gray-800">
-                    {getSuccessRate(run)}%
-                    </span>
-                </div>
-                </div>
-
-                <div class="mt-2 w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                <div
-                    class="bg-green-500 h-1.5 transition-all duration-500"
-                    style={`width: ${getSuccessRate(run)}%`}
-                />
-                </div>
-            </div>
-            ))}
-        </div>
-      ) : null
-    }
+  <div class="flex items-center justify-between mb-8">
+    <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+      Run History
+    </h1>
   </div>
+
+  {
+    error ? (
+      <div class="flex flex-col gap-1 p-5 bg-red-50 border-l-4 border-red-500 rounded-r-xl text-red-800 shadow-sm">
+        <h2 class="text-sm font-bold uppercase tracking-wide text-red-600">
+          Notice
+        </h2>
+        <p class="text-base">{error}</p>
+      </div>
+    ) : data ? (
+      <div class="space-y-4">
+        {data.map((run, index) => (
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div class="flex flex-wrap items-center gap-x-3 gap-y-2 flex-1">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-bold tracking-wide">
+                  Run #{data.length - index}
+                </span>
+
+                <span class="text-slate-300 hidden sm:inline">|</span>
+
+                <span class="text-sm font-medium text-slate-600">
+                  {formatDate(run.job_start_timestamp)}
+                </span>
+
+                <span class="text-slate-300 hidden sm:inline">|</span>
+
+                <span class="text-sm text-slate-500">
+                  <span class="font-medium text-slate-700">
+                    {getDuration(run).toFixed(1)}s
+                  </span>{" "}
+                  duration
+                </span>
+
+                <span class="text-slate-300 hidden sm:inline">|</span>
+
+                <span class="text-sm text-slate-500">
+                  <span class="font-medium text-slate-700">
+                    {run.total_urls}
+                  </span>{" "}
+                  URLs
+                </span>
+              </div>
+
+              <div class="flex items-center gap-4 text-sm bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                <span class="text-slate-600" title="Total Screenshots">
+                  {run.total_screenshots} total
+                </span>
+
+                <span
+                  class="text-emerald-600 font-semibold flex items-center gap-1"
+                  title="Successful"
+                >
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <title>Successful Screenshots</title>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  {run.completed_screenshots}
+                </span>
+
+                <span
+                  class="text-red-500 font-semibold flex items-center gap-1"
+                  title="Failed"
+                >
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <title>Failed Screenshots</title>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                  {run.failed_screenshots}
+                </span>
+
+                <span class="font-bold text-slate-900 ml-1">
+                  {getSuccessRate(run)}%
+                </span>
+              </div>
+            </div>
+
+            <div class="mt-4 w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200/50">
+              <div
+                class="bg-emerald-500 h-full transition-all duration-1000 ease-out"
+                style={`width: ${getSuccessRate(run)}%`}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : null
+  }
 </Layout>

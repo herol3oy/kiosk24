@@ -64,12 +64,7 @@ type UrlEntry = InferResponseType<typeof client.urls.$get>[0];
 let urls: UrlEntry[] = [];
 
 try {
-    const res = await client.urls.$get(
-        {},
-        {
-            headers: authHeaders,
-        },
-    );
+    const res = await client.urls.$get();
 
     if (res.ok) {
         urls = await res.json();
@@ -85,148 +80,224 @@ try {
 ---
 
 <Layout title="Dashboard - Kiosk24">
-    <div class="max-w-4xl mx-auto px-4 py-8">
-        {
-            fetchError && (
-                <div class="p-4 bg-red-50 text-red-700 rounded-lg border border-red-200 mb-8">
-                    {fetchError}
-                </div>
-            )
-        }
-
-        <div
-            class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8"
+    <div class="mb-8">
+        <h1
+            class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight"
         >
-            <div class="p-6 border-b border-gray-100 bg-gray-50/50">
-                <h2 class="text-base font-semibold text-gray-900">
-                    Add New URL
-                </h2>
-            </div>
-            <div class="p-6">
-                <form method="POST" class="flex flex-col sm:flex-row gap-4">
-                    <input type="hidden" name="action" value="add" />
+            Dashboard
+        </h1>
+    </div>
 
-                    <div class="grow">
-                        <input
-                            type="url"
-                            name="url"
-                            placeholder="https://example.com"
-                            required
-                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-4 py-2.5 border"
-                        />
-                    </div>
-                    <div class="w-full sm:w-32">
-                        <input
-                            type="text"
-                            name="language"
-                            placeholder="Lang (fa, en)"
-                            required
-                            maxlength="5"
-                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-4 py-2.5 border"
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        class="inline-flex justify-center items-center px-6 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-                    >
-                        Add
-                    </button>
-                </form>
+    {
+        fetchError && (
+            <div class="flex flex-col gap-1 p-5 bg-red-50 border-l-4 border-red-500 rounded-r-xl text-red-800 shadow-sm mb-8">
+                <h2 class="text-sm font-bold uppercase tracking-wide text-red-600">
+                    Error
+                </h2>
+                <p class="text-base">{fetchError}</p>
             </div>
+        )
+    }
+
+    <div
+        class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8"
+    >
+        <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+            <h2 class="text-lg font-semibold text-slate-900">Add New URL</h2>
         </div>
 
-        <div
-            class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
-        >
-            <div
-                class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/50"
-            >
-                <h3 class="text-base font-semibold text-gray-900">
-                    Monitored URLs
-                </h3>
-                <span
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+        <div class="p-6">
+            <form method="POST" class="flex flex-col sm:flex-row gap-4">
+                <input type="hidden" name="action" value="add" />
+
+                <div class="grow relative">
+                    <div
+                        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                    >
+                        <svg
+                            class="h-5 w-5 text-slate-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <title>URL</title>
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                            ></path></svg
+                        >
+                    </div>
+                    <input
+                        type="url"
+                        name="url"
+                        placeholder="https://example.com"
+                        required
+                        class="block w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 text-slate-900 placeholder-slate-400 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 sm:text-sm transition-all"
+                    />
+                </div>
+
+                <div class="w-full sm:w-40 relative">
+                    <input
+                        type="text"
+                        name="language"
+                        placeholder="Lang (fa, en)"
+                        required
+                        maxlength="5"
+                        class="block w-full px-4 py-2.5 rounded-xl border border-slate-300 text-slate-900 placeholder-slate-400 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 sm:text-sm transition-all text-center sm:text-left uppercase"
+                    />
+                </div>
+
+                <button
+                    type="submit"
+                    class="inline-flex justify-center items-center px-6 py-2.5 font-semibold rounded-xl shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                 >
-                    {urls.length} items
-                </span>
-            </div>
+                    <svg
+                        class="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <title>Add URL</title>
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 4v16m8-8H4"></path></svg
+                    >
+                    Add URL
+                </button>
+            </form>
+        </div>
+    </div>
 
-            <ul class="divide-y divide-gray-200">
-                {
-                    urls.length === 0 && (
-                        <li class="p-12 text-center text-gray-400 text-sm">
-                            No URLs found. Add one above.
-                        </li>
-                    )
-                }
+    <div
+        class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
+    >
+        <div
+            class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center"
+        >
+            <h3 class="text-lg font-semibold text-slate-900">Monitored URLs</h3>
+            <span
+                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20"
+            >
+                {urls.length} items
+            </span>
+        </div>
 
-                {
-                    urls.map((item) => {
-                        let hostname = item.url;
-                        try {
-                            hostname = new URL(item.url).hostname;
-                        } catch {}
-                        const favicon = `https://www.google.com/s2/favicons?domain=${item.url}&sz=32`;
+        <ul class="divide-y divide-slate-100">
+            {
+                urls.length === 0 && (
+                    <li class="flex flex-col items-center justify-center py-16 px-4 text-center">
+                        <div class="rounded-full bg-slate-50 p-4 mb-4">
+                            <svg
+                                class="w-8 h-8 text-slate-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <title>No URLs</title>
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                                />
+                            </svg>
+                        </div>
+                        <p class="text-sm text-slate-500 font-medium">
+                            No URLs found. Add one above to start monitoring.
+                        </p>
+                    </li>
+                )
+            }
 
-                        return (
-                            <li class="hover:bg-gray-50 transition-all duration-150">
-                                <div class="px-6 py-4 flex items-center justify-between">
-                                    <div class="flex items-center min-w-0 gap-4">
+            {
+                urls.map((item) => {
+                    let hostname = item.url;
+                    try {
+                        hostname = new URL(item.url).hostname;
+                    } catch {}
+                    const favicon = `https://www.google.com/s2/favicons?domain=${item.url}&sz=64`;
+
+                    return (
+                        <li class="group hover:bg-slate-50 transition-colors duration-200">
+                            <div class="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div class="flex items-center min-w-0 gap-4">
+                                    <div class="shrink-0 h-10 w-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 shadow-sm group-hover:border-slate-300 transition-colors">
                                         <img
                                             src={favicon}
                                             alt=""
-                                            class="h-8 w-8 rounded bg-gray-100 p-0.5"
+                                            class="h-5 w-5"
                                         />
-                                        <div class="min-w-0">
-                                            <p class="text-sm font-medium text-blue-600 truncate">
-                                                <a
-                                                    href={item.url}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    class="hover:underline"
-                                                >
-                                                    {hostname}
-                                                </a>
-                                            </p>
-                                            <p class="text-xs text-gray-500 truncate">
-                                                {item.url}
-                                            </p>
-                                        </div>
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 uppercase tracking-wide border border-gray-200">
-                                            {item.language}
-                                        </span>
                                     </div>
 
-                                    <form
-                                        method="POST"
-                                        class="m-0 flex items-center"
-                                    >
-                                        <input
-                                            type="hidden"
-                                            name="action"
-                                            value="delete"
-                                        />
-                                        <input
-                                            type="hidden"
-                                            name="id"
-                                            value={item.id}
-                                        />
-
-                                        <button
-                                            type="submit"
-                                            class="text-gray-400 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-all text-xl leading-none"
-                                            title="Delete"
-                                            onclick="return confirm('Are you sure you want to delete this URL?')"
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center gap-2 mb-0.5">
+                                            <a
+                                                href={item.url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                class="text-sm font-bold text-slate-900 hover:text-blue-600 truncate transition-colors"
+                                            >
+                                                {hostname}
+                                            </a>
+                                            <span class="shrink-0 inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600 uppercase tracking-wider border border-slate-200/60">
+                                                {item.language}
+                                            </span>
+                                        </div>
+                                        <p
+                                            class="text-xs text-slate-500 truncate"
+                                            title={item.url}
                                         >
-                                            &#128465;
-                                        </button>
-                                    </form>
+                                            {item.url}
+                                        </p>
+                                    </div>
                                 </div>
-                            </li>
-                        );
-                    })
-                }
-            </ul>
-        </div>
+
+                                <form
+                                    method="POST"
+                                    class="m-0 flex items-center justify-end sm:shrink-0"
+                                >
+                                    <input
+                                        type="hidden"
+                                        name="action"
+                                        value="delete"
+                                    />
+                                    <input
+                                        type="hidden"
+                                        name="id"
+                                        value={item.id}
+                                    />
+
+                                    <button
+                                        type="submit"
+                                        class="text-slate-400 hover:text-red-600 p-2.5 rounded-xl hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all group/btn"
+                                        title="Delete URL"
+                                        onclick="return confirm('Are you sure you want to delete this URL?')"
+                                    >
+                                        <svg
+                                            class="w-5 h-5 group-hover/btn:scale-110 transition-transform"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <title>Delete</title>
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                            />
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </li>
+                    );
+                })
+            }
+        </ul>
     </div>
 </Layout>
