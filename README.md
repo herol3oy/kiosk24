@@ -4,6 +4,8 @@ Kiosk24 (from Persian kušk, small pavilion) is designed to monitor a list of UR
 
 I was inspired to build this project by https://youtube.com/watch?v=JTOJsU3FSD8&t=118s
 
+<img width="900" alt="Image" src="https://github.com/user-attachments/assets/080d8f4d-3bf6-48fd-b63f-3f32c838e98a" />
+
 
 ## Project Structure
 
@@ -154,5 +156,3 @@ pnpm --filter agent run dev
 [13]: https://tsup.egoist.dev/
 [14]: https://pnpm.io/
 [15]: https://biomejs.dev/
-
-cd apps/api
