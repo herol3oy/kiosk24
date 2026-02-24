@@ -30,26 +30,24 @@ This project is a monorepo:
 
 graph LR
 
-    subgraph PI["🍓 Raspberry Pi 5"]
-        Agent["Agent Service"]
+    subgraph PI["Raspberry Pi 5"]
+        Agent["Agent"]
     end
 
-    subgraph CF["☁️ Cloudflare"]
-        API["API Service"]
+    subgraph CF["Cloudflare"]
+        API["API"]
 
-        subgraph Storage["Storage Layer"]
             D1[("D1 Database")]
-            R2[("R2 Object Storage")]
-        end
+            R2[("R2 Storage")]
     end
 
-    subgraph Browser["🌐 Browser"]
-        Web["Frontend App"]
+    subgraph Browser["Browser"]
+        Web["Frontend"]
     end
 
     Agent ==>|Sends Screenshots| API
-    API ==>|Provides Signed URLs| Agent
-    Web ==>|HTTPS Requests| API
+    API ==>|Provides URLs| Agent
+    Web ==>|Requests| API
 
     API -->|Stores Metadata| D1
     API -->|Stores Images| R2
