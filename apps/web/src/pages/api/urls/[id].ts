@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro'
+import { API_KEY } from "astro:env/server";
 
 export const DELETE: APIRoute = async ({ locals, params }) => {
   try {
@@ -15,7 +16,7 @@ export const DELETE: APIRoute = async ({ locals, params }) => {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${env.API_KEY}` 
+        'Authorization': `Bearer ${API_KEY}` 
       },
     })
 

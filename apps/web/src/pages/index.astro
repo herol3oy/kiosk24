@@ -4,10 +4,11 @@ import Layout from "../layouts/Layout.astro";
 import UrlRow from "../components/UrlRow";
 import DatePicker from "../components/DatePicker";
 import { getServerClient } from "../libs/api-client";
+import { PUBLIC_CDN_URL } from "astro:env/server";
 
 const env = Astro.locals.runtime.env;
 const client = getServerClient(env);
-const cdn = process.env.PUBLIC_CDN_URL || "http://localhost:8787";
+const cdn = PUBLIC_CDN_URL;
 
 const url = new URL(Astro.request.url);
 const deviceParam = url.searchParams.get("device");

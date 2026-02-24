@@ -1,9 +1,10 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import ComparePanelWrapper from "../../components/ComparePanel";
+import { PUBLIC_CDN_URL } from "astro:env/server";
 
 const baseUrl = "/api";
-const cdn = process.env.PUBLIC_CDN_URL || "http://localhost:8787";
+const cdn = PUBLIC_CDN_URL;
 
 const l_url = Astro.url.searchParams.get("l_url");
 const l_date = Astro.url.searchParams.get("l_date");

@@ -2,6 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import { getServerClient } from "../../libs/api-client";
 import type { InferResponseType } from "hono/client";
+import { API_KEY } from "astro:env/server";
 
 export const prerender = false;
 
@@ -9,7 +10,7 @@ const env = Astro.locals.runtime.env;
 const client = getServerClient(env);
 let fetchError: string | null = null;
 
-const token = env.API_KEY;
+const token = API_KEY;
 const authHeaders = {
     Authorization: `Bearer ${token}`,
 };

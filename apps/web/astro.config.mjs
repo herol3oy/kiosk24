@@ -1,5 +1,5 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
+import { envField, defineConfig } from 'astro/config';
 
 import cloudflare from '@astrojs/cloudflare';
 
@@ -22,5 +22,17 @@ export default defineConfig({
     plugins: [tailwindcss()]
   },
 
-  integrations: [preact({ compat: true })]
+  integrations: [preact({ compat: true })],
+  env: {
+    schema: {
+      PUBLIC_CDN_URL: envField.string({ 
+        context: "server", 
+        access: "public" 
+      }),
+      API_KEY: envField.string({ 
+        context: "server", 
+        access: "secret" 
+      })
+    }
+  }
 });

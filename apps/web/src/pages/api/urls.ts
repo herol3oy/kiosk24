@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro'
+import { API_KEY } from "astro:env/server";
 
 
 export const GET: APIRoute = async ({ locals }) => {
@@ -33,7 +34,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${env.API_KEY}`
+        'Authorization': `Bearer ${API_KEY}`
       },
       body: await request.text(),
     })
