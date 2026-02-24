@@ -1,21 +1,69 @@
 # kiosk24
 
-Kiosk24 is designed to monitor a list of URLs by taking regular screenshots across different device viewports (desktop and mobile). It allows users to track visual changes over time and compare different versions.
+Kiosk24 (from Persian kušk, small garden) is designed to monitor a list of URLs by taking regular screenshots across desktop and mobile device viewports . It allows users to track visual changes over time and compare different versions.
+
+I was inspired to build this project by https://youtube.com/watch?v=JTOJsU3FSD8&t=118s
+
 
 ## Project Structure
 
-This project is a monorepo containing the following applications:
+This project is a monorepo:
 
-- **[apps/agent](./apps/agent)**: A Playwright-based screenshot agent that captures website screenshots.
-- **[apps/api](./apps/api)**: A Hono-based backend API running on Cloudflare Workers, managing URLs and screenshot metadata.
-- **[apps/web](./apps/web)**: An Astro-based frontend for viewing and comparing captured screenshots.
-- **[libs/shared](./libs/shared)**: Shared TypeScript types and utilities.
+- **[apps/agent](./apps/agent)**: A Playwright-based screenshot
+- **[apps/api](./apps/api)**: A Hono-based backend API running on Cloudflare Workers
+- **[apps/web](./apps/web)**: An Astro-based frontend 
+- **[libs/shared](./libs/shared)**: Shared TypeScript types, Drizzle ORM and zod
+```mermaid
 
-### Workflow
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "fontFamily": "Inter, Segoe UI, sans-serif",
+    "primaryColor": "#4F46E5",
+    "primaryTextColor": "#ffffff",
+    "primaryBorderColor": "#4338CA",
+    "lineColor": "#64748B",
+    "secondaryColor": "#0EA5E9",
+    "tertiaryColor": "#F1F5F9"
+  }
+}}%%
 
-1.  **API**: Stores the target URLs and records screenshot metadata in a Cloudflare D1 database.
-2.  **Agent**: Periodically (or on-demand) fetches URLs from the API, uses Playwright to capture screenshots, and uploads them to Cloudflare R2 via the API.
-3.  **Web**: Provides a user interface to browse the screenshot history, filter by date and device, and compare screenshots.
+graph LR
+
+    subgraph PI["🍓 Raspberry Pi 5"]
+        Agent["Agent Service"]
+    end
+
+    subgraph CF["☁️ Cloudflare"]
+        API["API Service"]
+
+        subgraph Storage["Storage Layer"]
+            D1[("D1 Database")]
+            R2[("R2 Object Storage")]
+        end
+    end
+
+    subgraph Browser["🌐 Browser"]
+        Web["Frontend App"]
+    end
+
+    Agent ==>|Sends Screenshots| API
+    API ==>|Provides Signed URLs| Agent
+    Web ==>|HTTPS Requests| API
+
+    API -->|Stores Metadata| D1
+    API -->|Stores Images| R2
+
+    classDef compute fill:#EEF2FF,stroke:#4338CA,stroke-width:2px,color:#111827;
+    classDef cloud fill:#E0F2FE,stroke:#0284C7,stroke-width:2px,color:#0C4A6E;
+    classDef storage fill:#F8FAFC,stroke:#94A3B8,stroke-width:2px,color:#334155;
+    classDef browser fill:#ECFDF5,stroke:#059669,stroke-width:2px,color:#065F46;
+
+    class Agent compute;
+    class API cloud;
+    class D1,R2 storage;
+    class Web browser;
+```
 
 ## Tech Stack
 
