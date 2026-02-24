@@ -1,6 +1,6 @@
 # kiosk24
 
-Kiosk24 (from Persian kušk, small garden) is designed to monitor a list of URLs by taking regular screenshots across desktop and mobile device viewports . It allows users to track visual changes over time and compare different versions.
+Kiosk24 (from Persian kušk, small pavilion) is designed to monitor a list of URLs by taking regular screenshots across desktop and mobile device viewports . It allows users to track visual changes over time and compare different versions.
 
 I was inspired to build this project by https://youtube.com/watch?v=JTOJsU3FSD8&t=118s
 
@@ -118,14 +118,20 @@ openssl rand -base64 32
   API_KEY=<generated_key>
   ```
 
-**4. Run the Stack**
+**4. Initialize the Database**
+```bash
+cd apps/api
+npx wrangler d1 migrations apply kiosk24 
+```
+
+**5. Run the Stack**
 
 ```bash
 pnpm --filter api run dev
 pnpm --filter web run dev
 ```
 
-**5. Configure & Start Agent**
+**6. Configure & Start Agent**
 1. Go to [http://localhost:4321/dashboard](http://localhost:4321/dashboard)
 2. Add URLs and languages.
 3. Start the agent:
@@ -148,3 +154,5 @@ pnpm --filter agent run dev
 [13]: https://tsup.egoist.dev/
 [14]: https://pnpm.io/
 [15]: https://biomejs.dev/
+
+cd apps/api
