@@ -1,17 +1,14 @@
 import { QueryClientProvider, useQuery } from "@tanstack/preact-query";
 import type { EmblaCarouselType } from "embla-carousel";
 import useEmblaCarousel from "embla-carousel-react";
-import type { ComponentChildren } from "preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
-import type { ScreenshotEntry, UrlEntry } from "@kiosk24/shared";
+import type { ScreenshotEntry } from "@kiosk24/shared";
 import { queryClient } from "../libs/queryClient";
-import DatePicker from "./DatePicker";
 
-interface BaseProps { date: string; device: string; cdn: string; }
-interface CarouselProps extends BaseProps { url: string; }
+interface Props { url: string; initialDevice: string; date: string; cdn: string; }
+interface CarouselProps { url: string; device: string; date: string; cdn: string; }
 
 const dateFormatter = new Intl.DateTimeFormat([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-const languageNames = new Intl.DisplayNames(['en'], { type: 'language' });
 
 const getUrlMeta = (url: string) => ({
     cleanHost: new URL(url).hostname.replace(/^www\./, ""),
@@ -26,154 +23,15 @@ const buildImageUrls = (cdn: string, key: string | null, thumbWidth: number) => 
     };
 };
 
-const StatusMessage = ({ isError, children }: { isError?: boolean; children: ComponentChildren }) => (
-    <div className={`p-4 text-sm rounded-lg border inline-block ${isError ? 'text-red-700 bg-red-50 border-red-100' : 'text-gray-500 bg-gray-50 border-gray-100'}`}>
-        {children}
-    </div>
-);
-
-const CarouselButton = ({ onClick, disabled, label, icon }: { onClick: () => void, disabled: boolean, label: string, icon: string }) => (
-    <button
-        type="button" onClick={onClick} disabled={disabled} aria-label={label}
-        className="p-2 text-gray-600 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-gray-50 hover:text-gray-900 focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-40 disabled:pointer-events-none"
-    >
-        <span className="block w-5 h-5 text-xl font-bold leading-5">{icon}</span>
-    </button>
-);
-
-
-export default function HistoryGridWrapper(props: BaseProps) {
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => setMounted(true), []);
-
-    if (!mounted) {
-        return (
-            <div className="w-full p-4 space-y-6 pb-20 max-w-5xl mx-auto">
-                {[1, 2, 3].map(i => <div key={i} className="bg-white rounded-xl border border-gray-200 h-32 animate-pulse" />)}
-            </div>
-        );
-    }
-
-    return (
-        <QueryClientProvider client={queryClient}>
-            <HistoryGridInner {...props} />
-        </QueryClientProvider>
-    );
-}
-
-function HistoryGridInner({ date, device: initialDevice, cdn }: BaseProps) {
-    const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
-
-    const { data: languages = [] } = useQuery({
-        queryKey: ['languages'],
-        queryFn: async () => {
-            const res = await fetch('/api/languages');
-            if (!res.ok) throw new Error('Failed to fetch languages');
-            return await res.json() as string[];
-        }
-    });
-
-    const { data: urls = [], isError: isErrorUrls, isLoading: isLoadingUrls } = useQuery({
-        queryKey: ['urls', date, initialDevice],
-        queryFn: async () => {
-            const res = await fetch('/api/urls');
-            if (!res.ok) throw new Error('Network response failed');
-            const data = await res.json() as UrlEntry[];
-            return data.sort((a, b) => a.url.localeCompare(b.url));
-        }
-    });
-
-    if (isErrorUrls) return <div className="p-10 text-center"><StatusMessage isError>Failed to load history. Please refresh.</StatusMessage></div>;
-
-    const isLoading = isLoadingUrls;
-
-    if (isLoading) {
-        return (
-            <div className="w-full p-4 space-y-6 pb-20 max-w-5xl mx-auto">
-                {[1, 2, 3].map(i => <div key={i} className="bg-white rounded-xl border border-gray-200 h-32 animate-pulse" />)}
-            </div>
-        );
-    }
-
-    const filteredUrls = selectedLanguages.length > 0
-        ? urls.filter(u => selectedLanguages.includes(u.language))
-        : urls;
-
-    return (
-        <div className="w-full p-4 space-y-6 pb-20 max-w-5xl mx-auto">
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 mb-8">
-                {languages.length > 0 && (
-                    <fieldset className="flex flex-wrap gap-4 items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                        <legend className="px-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Filter by Language
-                        </legend>
-                        <div className="flex items-center">
-                            <button
-                                type="button"
-                                onClick={() => setSelectedLanguages([])}
-                                className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${selectedLanguages.length === 0
-                                    ? "bg-blue-600 border-blue-600 text-white shadow-sm"
-                                    : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"}`}
-                            >
-                                All
-                            </button>
-                        </div>
-                        <div className="h-6 w-px bg-gray-200 mx-1 hidden sm:block"></div>
-                        {languages.map(lang => {
-                            const isSelected = selectedLanguages.includes(lang);
-                            return (
-                                <div key={lang} className="flex items-center gap-2 group cursor-pointer">
-                                    <div className="relative flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            id={lang}
-                                            name="languages"
-                                            checked={isSelected}
-                                            onChange={() => {
-                                                setSelectedLanguages(prev =>
-                                                    isSelected
-                                                        ? prev.filter(l => l !== lang)
-                                                        : [...prev, lang]
-                                                );
-                                            }}
-                                            className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-colors cursor-pointer"
-                                        />
-                                    </div>
-                                    <label
-                                        htmlFor={lang}
-                                        className={`text-sm font-medium cursor-pointer transition-colors ${isSelected ? "text-blue-700" : "text-gray-600 group-hover:text-gray-900"}`}
-                                    >
-                                        {languageNames.of(lang) || lang}
-                                    </label>
-                                </div>
-                            );
-                        })}
-                    </fieldset>
-                )}
-                <div className="shrink-0">
-                    <DatePicker initialDate={date} />
-                </div>
-            </div>
-            {filteredUrls.map(({ id, url }) => {
-                return <UrlRow key={id} url={url} initialDevice={initialDevice} date={date} cdn={cdn} />;
-            })}
-            {filteredUrls.length === 0 && urls.length > 0 && (
-                <div className="text-center py-10">
-                    <StatusMessage>No URLs found for the selected language.</StatusMessage>
-                </div>
-            )}
-        </div>
-    );
-}
-
-function UrlRow({ url, initialDevice, date, cdn }: { url: string, initialDevice: string, date: string, cdn: string }) {
+function UrlRowInner({ url, initialDevice, date, cdn }: Props) {
     const [device, setDevice] = useState(initialDevice);
     const [isOpen, setIsOpen] = useState(false);
     const { cleanHost, favicon } = getUrlMeta(url);
 
     const DeviceToggle = ({ type, label }: { type: string, label: string }) => (
         <button
-            type="button" onClick={() => setDevice(type)}
+            type="button"
+            onClick={(e) => { e.preventDefault(); setDevice(type); }}
             className={`px-3 py-1 text-[10px] sm:text-xs font-semibold rounded-md transition-all ${device === type ? "bg-white shadow-sm text-blue-600" : "text-gray-500 hover:text-gray-700"}`}
         >
             {label}
@@ -233,14 +91,11 @@ function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
             const res = await fetch(`/api/screenshots?url=${encodeURIComponent(url)}&date=${date}&device=${device}`);
             if (!res.ok) throw new Error('Failed to fetch screenshots');
             return await res.json() as ScreenshotEntry[];
-        },
-        enabled: true
+        }
     });
 
-    const group = screenshots;
-    
-    const completedCount = group.filter(item => item.job_status === 'ok').length;
-    const failedCount = group.filter(item => item.job_status === 'failed').length;
+    const completedCount = screenshots.filter(item => item.job_status === 'ok').length;
+    const failedCount = screenshots.filter(item => item.job_status === 'failed').length;
 
     const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", containScroll: "trimSnaps" });
     const [prevDisabled, setPrevDisabled] = useState(true);
@@ -258,14 +113,14 @@ function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
     }, [emblaApi, onSelect]);
 
     if (isLoading) return <div className="h-40 animate-pulse bg-gray-50 rounded-lg flex items-center justify-center text-gray-400 text-xs">Loading snapshots...</div>;
-    if (isError) return <StatusMessage isError>Failed to load snapshots for this device.</StatusMessage>;
-    if (!group.length) return <StatusMessage>No snapshots found for this device.</StatusMessage>;
+    if (isError) return <div className="p-4 text-sm rounded-lg border text-red-700 bg-red-50 border-red-100">Failed to load snapshots for this device.</div>;
+    if (!screenshots.length) return <div className="p-4 text-sm rounded-lg border text-gray-500 bg-gray-50 border-gray-100">No snapshots found for this device.</div>;
 
     return (
         <section className="w-full py-2" aria-label="Screenshots">
             <div className="overflow-hidden w-full" ref={emblaRef}>
                 <div className="flex">
-                    {group.map((item) => {
+                    {screenshots.map((item) => {
                         const dateFormatted = dateFormatter.format(new Date(item.created_at));
                         const { full, thumb } = buildImageUrls(cdn, item.r2_key, isDesktop ? 400 : 240);
 
@@ -284,10 +139,6 @@ function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
                                     )}
                                     <div className="px-3 py-2 bg-white flex justify-between items-center text-[10px] text-gray-500 font-mono">
                                         <time dateTime={item.created_at}>{dateFormatted}</time>
-                                        <div className="flex items-center gap-1">
-                                            <span className={`w-1.5 h-1.5 rounded-full ${item.job_status === 'ok' ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                                            <span className={`font-bold uppercase ${item.job_status === 'ok' ? 'text-green-600' : 'text-red-600'}`}>{item.job_status}</span>
-                                        </div>
                                     </div>
                                 </article>
                             </div>
@@ -309,10 +160,34 @@ function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
                 </div>
 
                 <div className="flex gap-2">
-                    <CarouselButton onClick={() => emblaApi?.scrollPrev()} disabled={prevDisabled} label="Previous slide" icon="❮" />
-                    <CarouselButton onClick={() => emblaApi?.scrollNext()} disabled={nextDisabled} label="Next slide" icon="❯" />
+                    <button
+                        type="button"
+                        onClick={() => emblaApi?.scrollPrev()}
+                        disabled={prevDisabled}
+                        aria-label="Previous slide"
+                        className="p-2 text-gray-600 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-gray-50 hover:text-gray-900 focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-40 disabled:pointer-events-none"
+                    >
+                        <span className="block w-5 h-5 text-xl font-bold leading-5">❮</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => emblaApi?.scrollNext()}
+                        disabled={nextDisabled}
+                        aria-label="Next slide"
+                        className="p-2 text-gray-600 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-gray-50 hover:text-gray-900 focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-40 disabled:pointer-events-none"
+                    >
+                        <span className="block w-5 h-5 text-xl font-bold leading-5">❯</span>
+                    </button>
                 </div>
             </div>
         </section>
+    );
+}
+
+export default function UrlRow(props: Props) {
+    return (
+        <QueryClientProvider client={queryClient}>
+            <UrlRowInner {...props} />
+        </QueryClientProvider>
     );
 }

@@ -1,30 +1,164 @@
 ---
+import type { InferResponseType } from "hono/client";
 import Layout from "../layouts/Layout.astro";
-import HistoryGridWrapper from "../components/HistoryGrid";
+import UrlRow from "../components/UrlRow";
+import DatePicker from "../components/DatePicker";
+import { getServerClient } from "../libs/api-client";
 
-const cdn = process.env.PUBLIC_CDN_URL || "http://localhost:8787";
+const env = Astro.locals.runtime.env;
+const client = getServerClient(env);
+const cdn = import.meta.env.PUBLIC_CDN_URL || "http://localhost:8787";
 
-const deviceParam = Astro.url.searchParams.get("device");
-const dateParam = Astro.url.searchParams.get("date");
+const url = new URL(Astro.request.url);
+const deviceParam = url.searchParams.get("device");
+const dateParam = url.searchParams.get("date");
+const langParams = url.searchParams.getAll("lang");
 
 const currentDevice = deviceParam === "mobile" ? "mobile" : "desktop";
-
-const today = new Intl.DateTimeFormat('en-CA', { 
-    timeZone: 'Europe/Warsaw' 
+const today = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Europe/Warsaw",
 }).format(new Date());
-
 const currentDate = dateParam || today;
+
+type UrlData = InferResponseType<typeof client.urls.$get>[0];
+let urls: UrlData[] = [];
+let languages: string[] = [];
+let availableDates: string[] = [];
+let error: string | null = null;
+
+try {
+  const [urlsRes, langsRes, datesRes] = await Promise.all([
+    client.urls.$get(),
+    client.languages.$get(),
+    client["available-dates"].$get({ query: {} }),
+  ]);
+
+  if (!urlsRes.ok || !langsRes.ok || !datesRes.ok) {
+    error = "Failed to fetch initial data from API.";
+  } else {
+    urls = await urlsRes.json();
+    languages = await langsRes.json();
+    availableDates = await datesRes.json();
+
+    urls.sort((a, b) => a.url.localeCompare(b.url));
+  }
+} catch (e) {
+  console.error(e);
+  error = "Proxy failed to fetch history data.";
+}
+
+const filteredUrls =
+  langParams.length > 0
+    ? urls.filter((u) => langParams.includes(u.language))
+    : urls;
+
+const languageNames = new Intl.DisplayNames(["en"], { type: "language" });
+
+const buildLangToggleUrl = (lang: string) => {
+  const newUrl = new URL(Astro.request.url);
+  const currentLangs = newUrl.searchParams.getAll("lang");
+
+  newUrl.searchParams.delete("lang");
+
+  if (currentLangs.includes(lang)) {
+    currentLangs
+      .filter((l) => l !== lang)
+      .forEach((l) => {
+        newUrl.searchParams.append("lang", l);
+      });
+  } else {
+    currentLangs.forEach((l) => {
+      newUrl.searchParams.append("lang", l);
+    });
+    newUrl.searchParams.append("lang", lang);
+  }
+
+  return newUrl.toString();
+};
+
+const clearLangsUrl = () => {
+  const newUrl = new URL(Astro.request.url);
+  newUrl.searchParams.delete("lang");
+  return newUrl.toString();
+};
 ---
 
 <Layout title={`History - ${currentDate}`}>
-  <HistoryGridWrapper 
-    client:load 
-    date={currentDate} 
-    device={currentDevice}
-    cdn={cdn}
-  >
-    <div slot="fallback" class="h-screen flex justify-center pt-20">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-    </div>
-  </HistoryGridWrapper>
+  <div class="w-full p-4 space-y-6 pb-20 max-w-5xl mx-auto mt-10">
+    {
+      error ? (
+        <div class="p-6 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <h2 class="text-lg font-semibold mb-2">Notice</h2>
+          <p>{error}</p>
+        </div>
+      ) : (
+        <>
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-6 mb-8">
+            {languages.length > 0 && (
+              <div class="flex flex-wrap gap-4 items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                <span class="px-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Filter by Language
+                </span>
+
+                <div class="flex items-center gap-2">
+                  <a
+                    href={clearLangsUrl()}
+                    class={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${langParams.length === 0 ? "bg-blue-600 border-blue-600 text-white shadow-sm" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+                  >
+                    All
+                  </a>
+
+                  <div class="h-6 w-px bg-gray-200 mx-1 hidden sm:block" />
+
+                  {languages.map((lang) => {
+                    const isSelected = langParams.includes(lang);
+
+                    return (
+                      <a
+                        href={buildLangToggleUrl(lang)}
+                        class={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${isSelected ? "bg-blue-600 border-blue-600 text-white shadow-sm ring-2 ring-blue-600 ring-offset-1" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+                      >
+                        {isSelected && (
+                          <span aria-hidden="true" class="mr-1">
+                            ✓
+                          </span>
+                        )}
+                        {languageNames.of(lang) || lang}
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div class="shrink-0 relative z-10">
+              <DatePicker
+                client:load
+                initialDate={currentDate}
+                availableDates={availableDates}
+              />
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            {filteredUrls.length === 0 ? (
+              <div class="text-center py-10 p-4 text-sm rounded-lg border text-gray-500 bg-gray-50 border-gray-100">
+                No URLs found for the selected filters.
+              </div>
+            ) : (
+              filteredUrls.map((u) => (
+                <UrlRow
+                  client:idle
+                  url={u.url}
+                  initialDevice={currentDevice}
+                  date={currentDate}
+                  cdn={cdn}
+                />
+              ))
+            )}
+          </div>
+        </>
+      )
+    }
+  </div>
 </Layout>
