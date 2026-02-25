@@ -4,6 +4,7 @@ import type { EmblaCarouselType } from "embla-carousel";
 import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useState } from "preact/hooks";
 import { queryClient } from "../libs/queryClient";
+import Lightbox from "./Lightbox";
 
 interface Props {
 	url: string;
@@ -140,6 +141,9 @@ function UrlRowInner({ url, initialDevice, date, cdn }: Props) {
 function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
 	const isDesktop = device === "desktop";
 
+	// Extracted cleanHost specifically for the Carousel and Lightbox
+	const { cleanHost } = getUrlMeta(url);
+
 	const {
 		data: screenshots = [],
 		isLoading,
@@ -155,9 +159,25 @@ function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
 		},
 	});
 
-	const completedCount = screenshots.filter(
+	// --- Lightbox State & Data ---
+	const [lightboxOpen, setLightboxOpen] = useState(false);
+	const [lightboxIndex, setLightboxIndex] = useState(0);
+
+	const validScreenshots = screenshots.filter(
 		(item) => item.job_status === "ok",
-	).length;
+	);
+
+	// ⬇️ THIS IS THE FIX: Creating an array of objects instead of strings
+	const lightboxImages = validScreenshots.map((item) => ({
+		src: buildImageUrls(cdn, item.r2_key, isDesktop ? 400 : 240).full,
+		alt: `Screenshot of ${cleanHost}`,
+		title: cleanHost,
+		url: url,
+		date: dateFormatter.format(new Date(item.created_at)),
+		badge: isDesktop ? "Desktop" : "Mobile",
+	}));
+
+	const completedCount = validScreenshots.length;
 	const failedCount = screenshots.filter(
 		(item) => item.job_status === "failed",
 	).length;
@@ -207,10 +227,14 @@ function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
 						const dateFormatted = dateFormatter.format(
 							new Date(item.created_at),
 						);
-						const { full, thumb } = buildImageUrls(
+						const { thumb } = buildImageUrls(
 							cdn,
 							item.r2_key,
 							isDesktop ? 400 : 240,
+						);
+
+						const validIndex = validScreenshots.findIndex(
+							(s) => s.id === item.id,
 						);
 
 						return (
@@ -220,11 +244,15 @@ function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
 							>
 								<article className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow flex flex-col group">
 									{item.job_status === "ok" ? (
-										<a
-											href={full}
-											target="_blank"
-											rel="noopener noreferrer"
-											className={`relative bg-gray-50 block overflow-hidden ${isDesktop ? "aspect-16/10" : "aspect-9/16"}`}
+										<button
+											type="button"
+											onClick={(e) => {
+												e.preventDefault();
+												setLightboxIndex(validIndex);
+												setLightboxOpen(true);
+											}}
+											className={`relative bg-gray-50 block overflow-hidden cursor-zoom-in ${isDesktop ? "aspect-16/10" : "aspect-9/16"}`}
+											aria-label={`View screenshot from ${dateFormatted} in full screen`}
 										>
 											<img
 												src={thumb}
@@ -232,7 +260,7 @@ function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
 												alt={`Screenshot ${dateFormatted}`}
 												className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
 											/>
-										</a>
+										</button>
 									) : (
 										<div
 											className={`relative bg-red-50 flex flex-col items-center justify-center text-red-400 border-b border-red-100 ${isDesktop ? "aspect-16/10" : "aspect-9/16"}`}
@@ -288,6 +316,13 @@ function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
 					</button>
 				</div>
 			</div>
+
+			<Lightbox
+				images={lightboxImages}
+				initialIndex={lightboxIndex}
+				isOpen={lightboxOpen}
+				onClose={() => setLightboxOpen(false)}
+			/>
 		</section>
 	);
 }
