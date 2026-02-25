@@ -1,7 +1,7 @@
 ---
 import { PUBLIC_CDN_URL } from "astro:env/server";
 import type { InferResponseType } from "hono/client";
-import LatestGrid from "../../components/LatestGrid";
+import Latest from "../../components/Latest";
 import Layout from "../../layouts/Layout.astro";
 import { getServerClient } from "../../libs/api-client";
 
@@ -38,18 +38,14 @@ try {
 }
 ---
 
-<Layout title="Latest Screenshots">
-  <div class="max-w-7xl mx-auto mb-8">
-    <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-      Latest Screenshots
-    </h1>
+<Layout title="News in the Last Hour">
+  <div class="mb-8">
+    <Latest
+      client:load
+      initialData={data}
+      initialError={error}
+      cdn={cdn}
+      initialDevice={isDesktop ? "desktop" : "mobile"}
+    />
   </div>
-
-  <LatestGrid 
-    client:load 
-    data={data} 
-    error={error} 
-    cdn={cdn} 
-    isDesktop={isDesktop} 
-  />
 </Layout>

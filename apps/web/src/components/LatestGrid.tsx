@@ -1,7 +1,7 @@
 import { useState } from "preact/hooks";
 import Lightbox from "./Lightbox";
 
-interface LatestScreenshotItem {
+export interface LatestScreenshotItem {
 	url: string;
 	r2_key: string | null;
 	job_status: string;
@@ -28,7 +28,7 @@ export default function LatestGrid({
 	const thumbWidth = isDesktop ? 600 : 400;
 
 	const gridClass = isDesktop
-		? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
+		? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3"
 		: "grid-cols-2 md:grid-cols-3 lg:grid-cols-5";
 
 	const aspectClass = isDesktop ? "aspect-16/10" : "aspect-9/16";

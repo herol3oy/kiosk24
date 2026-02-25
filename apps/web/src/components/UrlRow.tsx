@@ -141,7 +141,6 @@ function UrlRowInner({ url, initialDevice, date, cdn }: Props) {
 function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
 	const isDesktop = device === "desktop";
 
-	// Extracted cleanHost specifically for the Carousel and Lightbox
 	const { cleanHost } = getUrlMeta(url);
 
 	const {
@@ -159,7 +158,6 @@ function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
 		},
 	});
 
-	// --- Lightbox State & Data ---
 	const [lightboxOpen, setLightboxOpen] = useState(false);
 	const [lightboxIndex, setLightboxIndex] = useState(0);
 
@@ -167,7 +165,6 @@ function ScreenshotCarousel({ url, date, device, cdn }: CarouselProps) {
 		(item) => item.job_status === "ok",
 	);
 
-	// ⬇️ THIS IS THE FIX: Creating an array of objects instead of strings
 	const lightboxImages = validScreenshots.map((item) => ({
 		src: buildImageUrls(cdn, item.r2_key, isDesktop ? 400 : 240).full,
 		alt: `Screenshot of ${cleanHost}`,
