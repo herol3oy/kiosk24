@@ -40,20 +40,22 @@ export default function DatePicker({ initialDate, availableDates }: Props) {
 	}, [availableDates, initialDate]);
 
 	return (
-		<div className="relative z-50">
-			<input
-				ref={inputRef}
-				type="text"
-				className="bg-gray-50 border border-gray-300 text-gray-700 text-xs rounded-md focus:ring-blue-500 focus:border-blue-500 block pl-8 p-1.5 w-32 cursor-pointer transition-colors hover:bg-white"
-				placeholder="Select Date"
-			/>
+		<div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-sm">
+			<div className="relative z-50">
+				<input
+					ref={inputRef}
+					type="text"
+					className="bg-white text-slate-700 text-sm font-semibold rounded-lg pl-8 pr-5 py-2 w-auto cursor-pointer transition-all duration-200 hover:bg-slate-50 focus:outline-none"
+					placeholder="Select Date"
+				/>
 
-			<span
-				aria-hidden="true"
-				className="absolute inset-y-0 left-2 flex items-center text-gray-500 text-sm leading-none pointer-events-none"
-			>
-				&#128466;
-			</span>
+				<span
+					aria-hidden="true"
+					className="absolute inset-y-0 left-2 flex items-center text-slate-400 text-sm leading-none pointer-events-none"
+				>
+					&#128466;
+				</span>
+			</div>
 		</div>
 	);
 }

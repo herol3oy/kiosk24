@@ -11,30 +11,34 @@ const cdn = PUBLIC_CDN_URL;
 
 const deviceParam = Astro.url.searchParams.get("device");
 const isDesktop = deviceParam === "desktop";
+const langParams = Astro.url.searchParams.getAll("lang");
+
+const [languagesRes, latestRes] = await Promise.all([
+  client.languages.$get(),
+  client.latest.$get({
+    query: {
+      device: isDesktop ? "desktop" : "mobile",
+    },
+  }),
+]);
+
+let languages: string[] = [];
+if (languagesRes.ok) {
+  languages = await languagesRes.json();
+}
 
 type LatestScreenshotsData = InferResponseType<typeof client.latest.$get>;
 
 let data: LatestScreenshotsData | null = null;
 let error: string | null = null;
 
-try {
-  const res = await client.latest.$get({
-    query: {
-      device: isDesktop ? "desktop" : "mobile",
-    },
-  });
-
-  if (!res.ok) {
-    error = `Failed to fetch latest screenshots: ${res.status}`;
-  } else {
-    data = await res.json();
-    if (data && data.length === 0) {
-      error = "No latest screenshots found.";
-    }
+if (!latestRes.ok) {
+  error = `Failed to fetch latest screenshots: ${latestRes.status}`;
+} else {
+  data = await latestRes.json();
+  if (data && data.length === 0) {
+    error = "No latest screenshots found.";
   }
-} catch (e) {
-  console.error(e);
-  error = "Proxy failed to fetch latest data";
 }
 ---
 
@@ -46,6 +50,8 @@ try {
       initialError={error}
       cdn={cdn}
       initialDevice={isDesktop ? "desktop" : "mobile"}
+      languages={languages}
+      initialLangParams={langParams}
     />
   </div>
 </Layout>
