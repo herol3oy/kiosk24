@@ -32,6 +32,8 @@ export async function processSingleUrl(
 
 				await page.goto(url, { timeout: 45000, waitUntil: "load" });
 
+				await page.waitForTimeout(2500);
+
 				await page.evaluate(getJsCleanup());
 
 				const buffer = await page.screenshot({

@@ -23,6 +23,7 @@ export function getJsCleanup(): string {
     document.querySelectorAll(\`
         .ad-slot-module__container__VEdre,
         .container--ads,
+        .cmpbox,
         .cmpwrapper,
         ad-placeholder,
         [class^="div-gpt-ad"],
@@ -80,6 +81,7 @@ export function getJsCleanup(): string {
         .cc-banner,
         dialog,
         #fides-banner-container,
+        .fides-overlay,
         .fides-modal-overlay,
         aside[class*="c-ad"],
         #ketch-banner,
