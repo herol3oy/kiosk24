@@ -51,7 +51,7 @@ export default function Home({
 	return (
 		<>
 			<h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-6">
-				URLs
+				Today’s Snapshot Timeline
 			</h1>
 
 			<div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-2 rounded-2xl shadow-sm border border-slate-200">
@@ -70,6 +70,10 @@ export default function Home({
 			</div>
 
 			<div className="space-y-4 mt-8">
+				<p className="text-sm font-medium text-slate-500">
+					{filteredUrls.length} {filteredUrls.length === 1 ? "URL" : "URLs"}
+				</p>
+
 				{filteredUrls.length === 0 ? (
 					<div className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50">
 						<div className="rounded-full bg-slate-100 p-3 mb-3">

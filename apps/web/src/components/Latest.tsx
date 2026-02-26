@@ -59,7 +59,7 @@ function LatestInner({
 	return (
 		<div className="space-y-6">
 			<h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-				News in the Last Hour
+				Latest News Snapshots
 			</h1>
 
 			<div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-2 rounded-2xl shadow-sm border border-slate-200">
@@ -100,6 +100,12 @@ function LatestInner({
 			<div
 				className={`transition-opacity duration-300 ${isLoading ? "opacity-60 pointer-events-none" : "opacity-100"}`}
 			>
+				{displayData && displayData.length > 0 && (
+					<p className="text-sm font-medium text-slate-500 mb-4">
+						{displayData.length} {displayData.length === 1 ? "URL" : "URLs"}
+					</p>
+				)}
+
 				<LatestGrid
 					data={displayData || null}
 					error={displayError}
