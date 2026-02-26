@@ -16,7 +16,7 @@ export const GET: APIRoute = async ({ locals, request }) => {
 				"Content-Type": "application/json",
 			},
 		});
-	} catch (e) {
+	} catch (_error) {
 		return new Response(JSON.stringify({ error: "Proxy Error" }), {
 			status: 500,
 			headers: { "Content-Type": "application/json" },

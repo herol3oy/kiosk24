@@ -24,7 +24,7 @@ export const DELETE: APIRoute = async ({ locals, params }) => {
 			status: res.status,
 			headers: { "Content-Type": "application/json" },
 		});
-	} catch (err) {
+	} catch (_error) {
 		return new Response(JSON.stringify({ error: "Proxy failed" }), {
 			status: 500,
 			headers: { "Content-Type": "application/json" },

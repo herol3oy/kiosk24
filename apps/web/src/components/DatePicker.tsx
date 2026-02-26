@@ -24,7 +24,7 @@ export default function DatePicker({ initialDate, availableDates }: Props) {
 			dateFormat: "Y-m-d",
 			enable: availableDates,
 			disableMobile: true,
-			onChange: (selectedDates, dateStr) => {
+			onChange: (_selectedDates, dateStr) => {
 				if (!dateStr || dateStr === initialDate) return;
 
 				const currentUrl = new URL(window.location.href);
