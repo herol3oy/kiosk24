@@ -88,7 +88,7 @@ async function fetchPanelData(
 
 		if (!dateParam) return data;
 
-		const device = deviceParam || "desktop";
+		const device = deviceParam || "mobile";
 		const shotsRes = await fetch(
 			`${baseUrl}/screenshots?url=${encodeURIComponent(urlParam)}&date=${dateParam}&device=${encodeURIComponent(
 				device,

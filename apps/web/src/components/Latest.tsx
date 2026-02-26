@@ -15,10 +15,10 @@ function LatestInner({ initialData, initialError, cdn, initialDevice }: Props) {
 
 	useEffect(() => {
 		const url = new URL(window.location.href);
-		if (device === "desktop") {
-			url.searchParams.delete("device");
-		} else {
+		if (device === "mobile") {
 			url.searchParams.set("device", device);
+		} else {
+			url.searchParams.delete("device");
 		}
 		window.history.replaceState(null, "", url.toString());
 	}, [device]);

@@ -14,7 +14,7 @@ const deviceParam = url.searchParams.get("device");
 const dateParam = url.searchParams.get("date");
 const langParams = url.searchParams.getAll("lang");
 
-const currentDevice = deviceParam === "mobile" ? "mobile" : "desktop";
+const currentDevice = deviceParam || "mobile";
 const today = new Intl.DateTimeFormat("en-CA", {
   timeZone: "Europe/Warsaw",
 }).format(new Date());

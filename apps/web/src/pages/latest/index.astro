@@ -10,7 +10,7 @@ const client = getServerClient(env);
 const cdn = PUBLIC_CDN_URL;
 
 const deviceParam = Astro.url.searchParams.get("device");
-const isDesktop = deviceParam !== "mobile";
+const isDesktop = deviceParam === "desktop";
 
 type LatestScreenshotsData = InferResponseType<typeof client.latest.$get>;
 
