@@ -9,7 +9,11 @@ export default function TopBar({ currentPath }: TopBarProps) {
 		{ name: "Latest", href: "/latest" },
 		{ name: "Compare", href: "/compare" },
 		{ name: "Status", href: "/status" },
-		{ name: "GitHub", href: "https://github.com/herol3oy/kiosk24", external: true },
+		{
+			name: "GitHub",
+			href: "https://github.com/herol3oy/kiosk24",
+			external: true,
+		},
 	];
 
 	const isActive = (href: string) =>
@@ -17,7 +21,7 @@ export default function TopBar({ currentPath }: TopBarProps) {
 
 	return (
 		<header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-md">
-			<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<div className="mx-auto max-w-7xl py-3 px-4 sm:px-6 lg:px-8">
 				<div className="flex h-16 items-center justify-between gap-4">
 					<div className="flex shrink-0 items-center">
 						<a
@@ -25,9 +29,11 @@ export default function TopBar({ currentPath }: TopBarProps) {
 							className="group flex items-center gap-2"
 							aria-label="KIOSK24 Home"
 						>
-							<span className="rounded-lg bg-linear-to-tr from-blue-700 to-blue-500 px-3 py-1.5 text-sm font-bold tracking-wide text-white shadow-sm transition-transform group-hover:scale-105">
-								KIOSK24
-							</span>
+							<img
+								src="/kiosk24-logo.svg"
+								alt="KIOSK24"
+								className="h-14 w-auto"
+							/>
 						</a>
 					</div>
 
