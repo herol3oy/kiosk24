@@ -3,7 +3,6 @@ import type { APIRoute } from "astro";
 export const GET: APIRoute = async ({ locals, request }) => {
 	try {
 		const env = locals.runtime.env;
-
 		const url = new URL(request.url);
 		const searchParams = url.search;
 
@@ -17,14 +16,10 @@ export const GET: APIRoute = async ({ locals, request }) => {
 			status: res.status,
 			headers: { "Content-Type": "application/json" },
 		});
-	} catch (e) {
-		console.error(e);
-		return new Response(
-			JSON.stringify({ error: "Proxy failed to fetch latest data" }),
-			{
-				status: 500,
-				headers: { "Content-Type": "application/json" },
-			},
-		);
+	} catch (_error) {
+		return new Response(JSON.stringify({ error: "Proxy failed" }), {
+			status: 500,
+			headers: { "Content-Type": "application/json" },
+		});
 	}
 };

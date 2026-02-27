@@ -10,18 +10,12 @@ export const GET: APIRoute = async ({ locals }) => {
 
 		return new Response(JSON.stringify(data), {
 			status: res.status,
-			headers: {
-				"Content-Type": "application/json",
-			},
+			headers: { "Content-Type": "application/json" },
 		});
-	} catch (error) {
-		console.error("Proxy Error:", error);
-		return new Response(
-			JSON.stringify({ error: "Proxy failed to connect to Worker" }),
-			{
-				status: 500,
-				headers: { "Content-Type": "application/json" },
-			},
-		);
+	} catch (_error) {
+		return new Response(JSON.stringify({ error: "Proxy failed" }), {
+			status: 500,
+			headers: { "Content-Type": "application/json" },
+		});
 	}
 };

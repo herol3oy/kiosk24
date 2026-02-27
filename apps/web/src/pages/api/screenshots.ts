@@ -8,16 +8,15 @@ export const GET: APIRoute = async ({ locals, request }) => {
 		const res = await env.API_WORKER.fetch(
 			`http://internal/screenshots${url.search}`,
 		);
+
 		const data = await res.json();
 
 		return new Response(JSON.stringify(data), {
 			status: res.status,
-			headers: {
-				"Content-Type": "application/json",
-			},
+			headers: { "Content-Type": "application/json" },
 		});
 	} catch (_error) {
-		return new Response(JSON.stringify({ error: "Proxy Error" }), {
+		return new Response(JSON.stringify({ error: "Proxy failed" }), {
 			status: 500,
 			headers: { "Content-Type": "application/json" },
 		});

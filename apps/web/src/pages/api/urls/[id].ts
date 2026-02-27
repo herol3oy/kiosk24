@@ -9,6 +9,7 @@ export const DELETE: APIRoute = async ({ locals, params }) => {
 		if (!id) {
 			return new Response(JSON.stringify({ error: "ID is required" }), {
 				status: 400,
+				headers: { "Content-Type": "application/json" },
 			});
 		}
 
@@ -20,7 +21,9 @@ export const DELETE: APIRoute = async ({ locals, params }) => {
 			},
 		});
 
-		return new Response(await res.text(), {
+		const data = await res.json();
+
+		return new Response(JSON.stringify(data), {
 			status: res.status,
 			headers: { "Content-Type": "application/json" },
 		});

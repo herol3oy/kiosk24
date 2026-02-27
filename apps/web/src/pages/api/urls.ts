@@ -13,7 +13,7 @@ export const GET: APIRoute = async ({ locals }) => {
 			status: res.status,
 			headers: { "Content-Type": "application/json" },
 		});
-	} catch {
+	} catch (_error) {
 		return new Response(JSON.stringify({ error: "Proxy failed" }), {
 			status: 500,
 			headers: { "Content-Type": "application/json" },
@@ -34,11 +34,13 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			body: await request.text(),
 		});
 
-		return new Response(await res.text(), {
+		const data = await res.json();
+
+		return new Response(JSON.stringify(data), {
 			status: res.status,
 			headers: { "Content-Type": "application/json" },
 		});
-	} catch {
+	} catch (_error) {
 		return new Response(JSON.stringify({ error: "Proxy failed" }), {
 			status: 500,
 			headers: { "Content-Type": "application/json" },
