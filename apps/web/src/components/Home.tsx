@@ -51,7 +51,7 @@ export default function Home({
 	return (
 		<>
 			<h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-6">
-				Today’s Snapshot Timeline
+				Snapshot Timeline
 			</h1>
 
 			<div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-2 rounded-2xl shadow-sm border border-slate-200">
