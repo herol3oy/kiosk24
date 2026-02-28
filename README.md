@@ -134,8 +134,7 @@ npx wrangler d1 migrations apply kiosk24
 **5. Run the Stack**
 
 ```bash
-pnpm --filter api run dev
-pnpm --filter web run dev
+pnpm --parallel --filter api --filter web run dev
 ```
 
 **6. Configure & Start Agent**
