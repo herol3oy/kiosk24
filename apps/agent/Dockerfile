@@ -1,19 +1,20 @@
-FROM node:25-bookworm-slim
+# syntax=docker/dockerfile:1
+
+FROM node:24-bookworm-slim
 
 WORKDIR /app
 
-RUN npm install --global corepack@latest --force && \
+RUN npm i -g corepack@latest --force && \
     corepack enable pnpm
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY apps/agent/package.json ./apps/agent/
 
-RUN pnpm install --filter agent
+RUN pnpm i --filter agent --frozen-lockfile
 
-WORKDIR /app/apps/agent
-RUN npx playwright install --with-deps chromium
+RUN npx -y playwright@1.58.2 install --with-deps chromium && \
+    rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
 COPY apps/agent ./apps/agent
 RUN pnpm --filter agent run build
 
