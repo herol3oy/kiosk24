@@ -1,11 +1,16 @@
-# kiosk24
+<div align="center">
 
-Kiosk24 (from Persian kušk, small pavilion) is designed to monitor a list of URLs by taking regular screenshots across desktop and mobile device viewports . It allows users to track visual changes over time and compare different versions.
+<img src="apps/web/public/kiosk24-logo-readme.png" alt="Kiosk24 logo" width="128">
+
+Kiosk24 (from kušk, Persian for “small pavilion” and “newsstand”) is designed to take hourly (`0 * * * *`) screenshots of news websites by taking regular screenshots across desktop and mobile device viewports . It allows users to track visual changes over time and compare different versions.
+
+The screenshot agent runs on a Raspberry Pi 5.
 
 I was inspired to build this project by https://youtube.com/watch?v=JTOJsU3FSD8&t=118s
 
-<img width="900" alt="Image" src="https://github.com/user-attachments/assets/080d8f4d-3bf6-48fd-b63f-3f32c838e98a" />
+![Kiosk24 in a browser](apps/web/public/kiosk24-app-screenshot.jpg)
 
+</div>
 
 ## Project Structure
 
