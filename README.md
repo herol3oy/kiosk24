@@ -8,7 +8,7 @@ The screenshot agent runs on a Raspberry Pi 5.
 
 I was inspired to build this project by https://youtube.com/watch?v=JTOJsU3FSD8&t=118s
 
-![Kiosk24 in a browser](apps/web/public/kiosk24-app-screenshot.jpg)
+![Kiosk24 in a browser](apps/web/public/kiosk24-app-screenshot.png)
 
 </div>
 
