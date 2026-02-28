@@ -183,7 +183,8 @@ export function getJsCleanup(): string {
         #appconsent,
         .message-overlay,
         .advertory,
-        .smartbanner
+        .smartbanner,
+        .ad-slot-header__wrapper
     \`).forEach(e => e.remove());
     `;
 }
