@@ -32,7 +32,7 @@ export default function TopBar({ currentPath }: TopBarProps) {
 							<img
 								src="/kiosk24-logo.svg"
 								alt="KIOSK24"
-								className="h-14 w-auto"
+								className="h-14 w-auto transition-opacity duration-200 group-hover:opacity-60"
 							/>
 						</a>
 					</div>
