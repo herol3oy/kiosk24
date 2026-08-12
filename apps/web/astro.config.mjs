@@ -2,7 +2,7 @@
 
 import cloudflare from "@astrojs/cloudflare";
 import preact from "@astrojs/preact";
-
+import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, envField } from "astro/config";
 
@@ -21,7 +21,7 @@ export default defineConfig({
 		plugins: [tailwindcss()],
 	},
 
-	integrations: [preact({ compat: true })],
+	integrations: [preact({ compat: true }), sitemap()],
 	env: {
 		schema: {
 			PUBLIC_CDN_URL: envField.string({
